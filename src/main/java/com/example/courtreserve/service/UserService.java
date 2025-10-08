@@ -42,6 +42,41 @@ public class UserService {
         LocalDateTime createdAt;
     }
 
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class LoginUserRequest {
+        String email;
+        String password;
+    }
+
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class LoginUserResponse {
+        Long id;
+        String name;
+        String email;
+        LocalDateTime createdAt;
+        String token;
+
+        public LoginUserResponse(Long id, String name, String email, LocalDateTime createdAt) {
+            this.id = id;
+            this.name = name;
+            this.email = email;
+            this.createdAt = createdAt;
+        }
+    }
+
+    public LoginUserResponse getUser(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User Not Found"));
+
+        return new LoginUserResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getCreated()
+        );
+    }
+
     public AddUserResponse addNewUser(AddUserRequest addUserRequest) {
         boolean exists = userRepository.existsByEmail(addUserRequest.getEmail());
         if (exists) {
@@ -55,6 +90,7 @@ public class UserService {
                 .name(addUserRequest.getName())
                 .email(addUserRequest.getEmail())
                 .password(passwordEncoder.encode(addUserRequest.getPassword()))
+                .created(LocalDateTime.now())
                 .build();
 
         newUser.getRoles().add(userRole);
