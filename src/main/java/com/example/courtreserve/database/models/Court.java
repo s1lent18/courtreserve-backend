@@ -2,7 +2,6 @@ package com.example.courtreserve.database.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 

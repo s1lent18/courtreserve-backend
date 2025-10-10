@@ -1,18 +1,20 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
+import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.VendorService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,9 @@ public class VendorController {
 
     @Autowired
     private VendorService vendorService;
+
+    @Autowired
+    private CourtService courtService;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -71,6 +76,26 @@ public class VendorController {
             response.put("vendorData", req);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/{vendorId}/addCourt")
+    @PreAuthorize("hasRole('VENDOR')")
+    public ResponseEntity<?> registerCourt(
+        @PathVariable Long vendorId,
+        @RequestBody CourtService.AddCourtRequest request
+    ) {
+
+        try {
+            var court = courtService.addCourt(vendorId, request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Court added successfully", "court", court));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
