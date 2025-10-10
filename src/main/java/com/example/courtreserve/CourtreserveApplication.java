@@ -9,5 +9,4 @@ public class CourtreserveApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CourtreserveApplication.class, args);
 	}
-
 }
