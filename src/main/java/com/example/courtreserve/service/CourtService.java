@@ -47,6 +47,22 @@ public class CourtService {
         private String type;
     }
 
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class GetPopularCourts {
+        Long id;
+        String name;
+        String description;
+        String location;
+        String type;
+        Double price;
+        String open;
+        String close;
+        Long vendorId;
+        Long bookingCount;
+        Double avgRating;
+    }
+
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
         User vendor = userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 

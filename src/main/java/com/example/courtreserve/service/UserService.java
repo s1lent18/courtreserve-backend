@@ -31,6 +31,7 @@ public class UserService {
         String name;
         String email;
         String password;
+        String location;
     }
 
     @Getter @Setter
@@ -39,6 +40,7 @@ public class UserService {
         Long id;
         String name;
         String email;
+        String location;
         LocalDateTime createdAt;
     }
 
@@ -55,13 +57,15 @@ public class UserService {
         Long id;
         String name;
         String email;
+        String location;
         LocalDateTime createdAt;
         String token;
 
-        public LoginUserResponse(Long id, String name, String email, LocalDateTime createdAt) {
+        public LoginUserResponse(Long id, String name, String email, LocalDateTime createdAt, String location) {
             this.id = id;
             this.name = name;
             this.email = email;
+            this.location = location;
             this.createdAt = createdAt;
         }
     }
@@ -73,7 +77,8 @@ public class UserService {
             user.getId(),
             user.getName(),
             user.getEmail(),
-            user.getCreated()
+            user.getCreated(),
+            user.getLocation()
         );
     }
 
@@ -90,6 +95,7 @@ public class UserService {
                 .name(addUserRequest.getName())
                 .email(addUserRequest.getEmail())
                 .password(passwordEncoder.encode(addUserRequest.getPassword()))
+                .location(addUserRequest.getLocation())
                 .created(LocalDateTime.now())
                 .build();
 
@@ -101,6 +107,7 @@ public class UserService {
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
+                savedUser.getLocation(),
                 savedUser.getCreated()
         );
     }

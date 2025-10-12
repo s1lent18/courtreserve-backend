@@ -24,8 +24,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 200)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private String location;
 
     @Column(columnDefinition = "timestamp default current_timestamp")
     private LocalDateTime created;
