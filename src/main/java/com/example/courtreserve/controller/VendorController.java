@@ -87,7 +87,6 @@ public class VendorController {
         @PathVariable Long vendorId,
         @RequestBody CourtService.AddCourtRequest request
     ) {
-
         try {
             var court = courtService.addCourt(vendorId, request);
             return ResponseEntity.status(HttpStatus.CREATED)
