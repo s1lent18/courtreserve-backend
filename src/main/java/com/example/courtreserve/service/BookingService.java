@@ -40,7 +40,6 @@ public class BookingService {
         LocalDateTime endTime;
         Integer price;
         Integer advance;
-        Integer toBePaid;
     }
 
     @Setter @Getter
@@ -68,7 +67,8 @@ public class BookingService {
             .created(LocalDateTime.now())
             .advance(request.getAdvance())
             .price(request.getPrice())
-            .toBePaid(request.getToBePaid())
+            .status("PENDING")
+            .toBePaid(request.getPrice() - request.getAdvance())
             .endTime(request.getEndTime())
             .startTime(request.getStartTime())
             .build();
