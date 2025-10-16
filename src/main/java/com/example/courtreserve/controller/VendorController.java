@@ -99,4 +99,21 @@ public class VendorController {
             throw new RuntimeException(e);
         }
     }
+
+    @GetMapping("/getVendorCourts")
+    public ResponseEntity<?> getCourtsByVendor(
+            @RequestParam Long id
+    ) {
+        try {
+            var court = courtService.getCourtsOfVendor(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Courts Found Successfully", "court", court));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

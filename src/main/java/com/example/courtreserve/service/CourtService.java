@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class CourtService {
@@ -47,20 +48,18 @@ public class CourtService {
         private String type;
     }
 
-    @Getter @Setter
-    @AllArgsConstructor
-    public static class GetPopularCourts {
-        Long id;
-        String name;
-        String description;
-        String location;
-        String type;
-        Double price;
-        String open;
-        String close;
-        Long vendorId;
-        Long bookingCount;
-        Double avgRating;
+    public interface GetPopularCourts {
+        Long getId();
+        String getName();
+        String getDescription();
+        String getLocation();
+        String getType();
+        Double getPrice();
+        String getOpen();
+        String getClose();
+        Long getVendorId();
+        Long getBookingCount();
+        Double getAvgRating();
     }
 
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
@@ -96,5 +95,13 @@ public class CourtService {
             savedCourt.getCloseTime().toString(),
             savedCourt.getType()
         );
+    }
+
+    public GetPopularCourts getCourtById(Long Id) {
+        return courtRepository.findByPopularId(Id);
+    }
+
+    public List<GetPopularCourts> getCourtsOfVendor(Long Id) {
+        return courtRepository.findAllOfSingleVendor(Id);
     }
 }

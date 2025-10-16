@@ -36,6 +36,9 @@ public class UserController {
     private final BookingService bookingService;
 
     @Autowired
+    private final CourtService courtService;
+
+    @Autowired
     private final CourtRepository courtRepository;
 
     @Autowired
@@ -47,10 +50,11 @@ public class UserController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtRepository courtRepository) {
+    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtService courtService, CourtRepository courtRepository) {
         this.userService = userService;
         this.reviewService = reviewService;
         this.bookingService = bookingService;
+        this.courtService = courtService;
         this.courtRepository = courtRepository;
     }
 
@@ -140,6 +144,23 @@ public class UserController {
             var review = reviewService.addReview(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "Review given successfully", "review", review));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/getCourt")
+    public ResponseEntity<?> getCourtById(
+            @RequestParam Long id
+    ) {
+        try {
+            var court = courtService.getCourtById(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Court Found Successfully", "court", court));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
