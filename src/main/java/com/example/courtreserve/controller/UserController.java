@@ -39,6 +39,9 @@ public class UserController {
     private final CourtRepository courtRepository;
 
     @Autowired
+    private final CourtService courtService;
+
+    @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
@@ -47,11 +50,12 @@ public class UserController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtRepository courtRepository) {
+    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtRepository courtRepository, CourtService courtService) {
         this.userService = userService;
         this.reviewService = reviewService;
         this.bookingService = bookingService;
         this.courtRepository = courtRepository;
+        this.courtService = courtService;
     }
 
     @PostMapping("/register")
@@ -113,6 +117,18 @@ public class UserController {
         response.put("totalPages", courtsPage.getTotalPages());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/getCourt/{courtId}")
+    public ResponseEntity<?> getCourtById(@PathVariable Long courtId) {
+        try {
+            CourtService.GetSingleCourt court = courtService.getCourtById(courtId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("court", court);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/createBooking")

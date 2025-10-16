@@ -40,5 +40,10 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
             nativeQuery = true)
     Page<CourtService.GetPopularCourts> findCourtStatsByCount(@Param("location") String location, Pageable pageable);
 
+    @Query(value = "SELECT COUNT(*) FROM bookings WHERE facility_id = :courtId", nativeQuery = true)
+    Long countBookingsByCourtId(@Param("courtId") Long courtId);
+
+    @Query(value = "SELECT AVG(rating) FROM reviews WHERE facility_id = :courtId", nativeQuery = true)
+    Double getAverageRatingByCourtId(@Param("courtId") Long courtId);
 
 }

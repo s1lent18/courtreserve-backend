@@ -63,6 +63,22 @@ public class CourtService {
         Double avgRating;
     }
 
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class GetSingleCourt {
+        Long id;
+        String name;
+        String description;
+        String location;
+        String type;
+        Double price;
+        String open;
+        String close;
+        Long vendorId;
+        Long bookingCount;
+        Double avgRating;
+    }
+
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
         User vendor = userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
@@ -95,6 +111,29 @@ public class CourtService {
             savedCourt.getOpenTime().toString(),
             savedCourt.getCloseTime().toString(),
             savedCourt.getType()
+        );
+    }
+
+    public GetSingleCourt getCourtById(Long courtId) {
+        Court court = courtRepository.findById(courtId)
+                .orElseThrow(() -> new RuntimeException("Court not found with id: " + courtId));
+
+        // Get booking count and average rating using the same logic as popular courts
+        Long bookingCount = courtRepository.countBookingsByCourtId(courtId);
+        Double avgRating = courtRepository.getAverageRatingByCourtId(courtId);
+
+        return new GetSingleCourt(
+            court.getId(),
+            court.getName(),
+            court.getDescription(),
+            court.getLocation(),
+            court.getType(),
+            court.getPrice().doubleValue(),
+            court.getOpenTime().toString(),
+            court.getCloseTime().toString(),
+            court.getVendor().getId(),
+            bookingCount != null ? bookingCount : 0L,
+            avgRating != null ? avgRating : 0.0
         );
     }
 }
