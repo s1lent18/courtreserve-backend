@@ -153,20 +153,27 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getCourt")
-    public ResponseEntity<?> getCourtById(
-            @RequestParam Long id
-    ) {
+    @GetMapping("/getCourt/{id}")
+    public ResponseEntity<?> getCourtById(@PathVariable Long id) {
         try {
             var court = courtService.getCourtById(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Court Found Successfully", "court", court));
+            
+            if (court == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Court not found with id: " + id));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Court found successfully");
+            response.put("court", court);
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal server error"));
         }
     }
 }
