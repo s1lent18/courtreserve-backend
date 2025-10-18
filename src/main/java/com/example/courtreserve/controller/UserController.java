@@ -5,6 +5,7 @@ import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.ReviewService;
+import com.example.courtreserve.service.TournamentService;
 import com.example.courtreserve.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class UserController {
     private final CourtService courtService;
 
     @Autowired
+    private final TournamentService tournamentService;
+
+    @Autowired
     private final CourtRepository courtRepository;
 
     @Autowired
@@ -50,11 +54,12 @@ public class UserController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtService courtService, CourtRepository courtRepository) {
+    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtService courtService, TournamentService tournamentService, CourtRepository courtRepository) {
         this.userService = userService;
         this.reviewService = reviewService;
         this.bookingService = bookingService;
         this.courtService = courtService;
+        this.tournamentService = tournamentService;
         this.courtRepository = courtRepository;
     }
 
@@ -168,6 +173,23 @@ public class UserController {
             response.put("court", court);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal server error"));
+        }
+    }
+
+    @PostMapping("/createTournament")
+    public ResponseEntity<?> createTournament(
+            @RequestBody TournamentService.CreateTournamentRequest request
+    ) {
+        try {
+            var tournament = tournamentService.createTournament(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Tournament created successfully", "tournament", tournament));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
