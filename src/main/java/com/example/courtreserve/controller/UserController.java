@@ -5,6 +5,7 @@ import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.ReviewService;
+import com.example.courtreserve.service.TeamService;
 import com.example.courtreserve.service.TournamentService;
 import com.example.courtreserve.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -46,6 +47,9 @@ public class UserController {
     private final TournamentService tournamentService;
 
     @Autowired
+    private final TeamService teamService;
+
+    @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
@@ -54,13 +58,14 @@ public class UserController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtService courtService, CourtRepository courtRepository, TournamentService tournamentService) {
+    public UserController(UserService userService, ReviewService reviewService, BookingService bookingService, CourtService courtService, CourtRepository courtRepository, TournamentService tournamentService, TeamService teamService) {
         this.userService = userService;
         this.reviewService = reviewService;
         this.bookingService = bookingService;
         this.courtService = courtService;
         this.courtRepository = courtRepository;
         this.tournamentService = tournamentService;
+        this.teamService = teamService;
     }
 
     @PostMapping("/register")
@@ -190,6 +195,41 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/createTeam")
+    public ResponseEntity<?> createTeam(
+            @RequestBody TeamService.CreateTeamRequest request,
+            @RequestParam Long captainId
+    ) {
+        try {
+            var team = teamService.createTeam(captainId, request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Team created successfully", "team", team));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/joinTournament")
+    public ResponseEntity<?> joinTournament(
+            @RequestBody TeamService.JoinTournamentRequest request
+    ) {
+        try {
+            var participation = teamService.joinTournament(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Team successfully registered for tournament", "participation", participation));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }
