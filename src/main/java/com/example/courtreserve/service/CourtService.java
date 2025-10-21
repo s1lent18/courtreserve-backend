@@ -2,6 +2,7 @@ package com.example.courtreserve.service;
 
 import com.example.courtreserve.database.models.Court;
 import com.example.courtreserve.database.models.User;
+import com.example.courtreserve.database.repository.BookingRepository;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,9 @@ public class CourtService {
 
     @Autowired
     CourtRepository courtRepository;
+
+    @Autowired
+    BookingRepository bookingRepository;
 
     @Getter @Setter
     @AllArgsConstructor
@@ -62,6 +66,23 @@ public class CourtService {
         Double getAvgRating();
     }
 
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class GetSingleCourtResponse {
+        Long id;
+        String name;
+        String description;
+        String location;
+        String type;
+        Double price;
+        String open;
+        String close;
+        Long vendorId;
+        Long bookingCount;
+        Double avgRating;
+        List<BookingService.BookingTimeProjection> bookedTimes;
+    }
+
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
         User vendor = userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
@@ -97,8 +118,25 @@ public class CourtService {
         );
     }
 
-    public GetPopularCourts getCourtById(Long Id) {
-        return courtRepository.findByPopularId(Id);
+    public GetSingleCourtResponse getCourtById(Long Id) {
+        GetPopularCourts courtInfo = courtRepository.findByPopularId(Id);
+
+        List<BookingService.BookingTimeProjection> reservedTimes = bookingRepository.findBookingTimesByCourtId(Id);
+
+        return new GetSingleCourtResponse(
+                courtInfo.getId(),
+                courtInfo.getName(),
+                courtInfo.getDescription(),
+                courtInfo.getLocation(),
+                courtInfo.getType(),
+                courtInfo.getPrice(),
+                courtInfo.getOpen(),
+                courtInfo.getClose(),
+                courtInfo.getVendorId(),
+                courtInfo.getBookingCount(),
+                courtInfo.getAvgRating(),
+                reservedTimes
+        );
     }
 
     public List<GetPopularCourts> getCourtsOfVendor(Long Id) {

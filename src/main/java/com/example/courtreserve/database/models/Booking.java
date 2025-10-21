@@ -1,5 +1,6 @@
 package com.example.courtreserve.database.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,6 +33,7 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facility_id", nullable = false)
+    @JsonBackReference
     private Court facility;
 
     @Column(name = "start_time", nullable = false)

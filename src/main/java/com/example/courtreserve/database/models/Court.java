@@ -1,10 +1,14 @@
 package com.example.courtreserve.database.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "courts")
@@ -46,4 +50,8 @@ public class Court {
 
     @Column(columnDefinition = "timestamp default current_timestamp")
     private LocalDateTime created;
+
+    @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Booking> bookings = new ArrayList<>();
 }

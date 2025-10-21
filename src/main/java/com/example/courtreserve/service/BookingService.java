@@ -57,6 +57,11 @@ public class BookingService {
         LocalDateTime created;
     }
 
+    public interface BookingTimeProjection {
+        LocalDateTime getStartTime();
+        LocalDateTime getEndTime();
+    }
+
     public AddBookingResponse createBooking(AddBookingRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User Not Found"));
         Court court = courtRepository.findById(request.getFacilityId()).orElseThrow(() -> new RuntimeException("Court Not Found"));
