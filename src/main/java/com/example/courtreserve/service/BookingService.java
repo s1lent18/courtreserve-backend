@@ -10,8 +10,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class BookingService {
@@ -92,5 +94,18 @@ public class BookingService {
             savedBooking.getToBePaid(),
             savedBooking.getCreated()
         );
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    public void checkExpiredBookings() {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Booking> expiredBookings = bookingRepository.findAllByStartTimeBefore(now);
+
+        for (Booking booking : expiredBookings) {
+            booking.setStatus("EXPIRED");
+        }
+
+        bookingRepository.saveAll(expiredBookings);
     }
 }
