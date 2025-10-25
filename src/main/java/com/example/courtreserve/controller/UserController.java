@@ -228,4 +228,21 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/{bookingId}/cancelBooking")
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable Long bookingId
+    ) {
+        try {
+            var canceledBooking = bookingService.rejectBooking(bookingId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Booking Canceled", "canceledBooking", canceledBooking));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

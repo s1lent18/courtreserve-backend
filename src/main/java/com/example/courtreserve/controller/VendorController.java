@@ -153,4 +153,21 @@ public class VendorController {
             throw new RuntimeException(e);
         }
     }
+
+    @PostMapping("/{bookingId}/rejectBooking")
+    public ResponseEntity<?> rejectBooking(
+            @PathVariable Long bookingId
+    ) {
+        try {
+            var rejectedBooking = bookingService.rejectBooking(bookingId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Booking Rejected", "rejectedBooking", rejectedBooking));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
