@@ -1,6 +1,8 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
+import com.example.courtreserve.database.models.Booking;
+import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.VendorService;
 import jakarta.persistence.EntityNotFoundException;
@@ -10,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +28,9 @@ public class VendorController {
 
     @Autowired
     private CourtService courtService;
+
+    @Autowired
+    private BookingService bookingService;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -108,6 +111,40 @@ public class VendorController {
             var court = courtService.getCourtsOfVendor(id);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(Map.of("message", "Courts Found Successfully", "court", court));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/getPending")
+    public ResponseEntity<?> getPendingBookings(
+            @RequestParam Long id
+    ) {
+        try {
+            var pendingBookings = bookingService.getPendingBooking(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Pending Bookings returned", "pendingBookings", pendingBookings));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/{bookingId}/confirmBooking")
+    public ResponseEntity<?> confirmBooking(
+            @PathVariable Long bookingId
+    ) {
+        try {
+            var confirmedBooking = bookingService.confirmBooking(bookingId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Booking Confirmed", "confirmedBooking", confirmedBooking));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {

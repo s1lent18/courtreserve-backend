@@ -96,4 +96,7 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
     """,
             nativeQuery = true)
     List<CourtService.GetPopularCourts> findAllOfSingleVendor(@Param("id") Long id);
+
+    @Query("SELECT c.id FROM Court c WHERE c.vendor.id = :vendorId")
+    List<Long> findCourtIdsByVendorId(@Param("vendorId") Long vendorId);
 }

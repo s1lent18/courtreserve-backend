@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -94,6 +95,30 @@ public class BookingService {
             savedBooking.getToBePaid(),
             savedBooking.getCreated()
         );
+    }
+
+    public List<Booking> getPendingBooking(Long vendorId) {
+        userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+
+        List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
+
+        return bookingRepository.findPendingBookings(courtIds);
+    }
+
+    public Booking confirmBooking(Long bookingId) {
+        Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (pendingBooking.getStartTime().isBefore(now)) {
+            pendingBooking.setStatus("CONFIRMED");
+        } else {
+            pendingBooking.setStatus("REJECTED");
+        }
+
+        bookingRepository.save(pendingBooking);
+
+        return pendingBooking;
     }
 
     @Scheduled(cron = "0 0 0 * * *")

@@ -17,4 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<BookingService.BookingTimeProjection> findBookingTimesByCourtId(@Param("courtId") Long courtId);
 
     List<Booking> findAllByStartTimeBefore(LocalDateTime time);
+
+    @Query("SELECT b FROM Booking b WHERE b.facility.id IN :courtIds AND b.status = 'PENDING'")
+    List<Booking> findPendingBookings(@Param("courtIds") List<Long> courtIds);
 }
