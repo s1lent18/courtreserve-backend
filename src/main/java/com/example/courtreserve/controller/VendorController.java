@@ -137,6 +137,23 @@ public class VendorController {
         }
     }
 
+    @GetMapping("/getSingleCourt")
+    public ResponseEntity<?> getSingleCourt(
+            @RequestParam Long id
+    ) {
+        try {
+            var singleCourt = courtService.getVendorCourtById(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Single Court Returned", "court", singleCourt));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("/{bookingId}/confirmBooking")
     public ResponseEntity<?> confirmBooking(
             @PathVariable Long bookingId

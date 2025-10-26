@@ -1,5 +1,6 @@
 package com.example.courtreserve.service;
 
+import com.example.courtreserve.database.models.Booking;
 import com.example.courtreserve.database.models.Court;
 import com.example.courtreserve.database.models.User;
 import com.example.courtreserve.database.repository.BookingRepository;
@@ -11,6 +12,7 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -83,6 +85,20 @@ public class CourtService {
         List<BookingService.BookingTimeProjection> bookedTimes;
     }
 
+    @Getter @Setter @AllArgsConstructor
+    public static class GetSingleCourtVendorResponse {
+        Long id;
+        LocalTime closeTime;
+        LocalDateTime createdAt;
+        String description;
+        String location;
+        String name;
+        LocalTime openTime;
+        Integer price;
+        String type;
+        List<Booking> bookings;
+    }
+
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
         User vendor = userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
@@ -136,6 +152,23 @@ public class CourtService {
                 courtInfo.getBookingCount(),
                 courtInfo.getAvgRating(),
                 reservedTimes
+        );
+    }
+
+    public GetSingleCourtVendorResponse getVendorCourtById(Long Id) {
+        Court court = courtRepository.findById(Id).orElseThrow(() -> new RuntimeException("Court Not Found"));
+
+        return new GetSingleCourtVendorResponse(
+                court.getId(),
+                court.getCloseTime(),
+                court.getCreated(),
+                court.getDescription(),
+                court.getLocation(),
+                court.getName(),
+                court.getOpenTime(),
+                court.getPrice(),
+                court.getType(),
+                court.getBookings()
         );
     }
 
