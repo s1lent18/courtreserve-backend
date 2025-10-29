@@ -1,9 +1,9 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
-import com.example.courtreserve.database.models.Booking;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
+import com.example.courtreserve.service.TournamentService;
 import com.example.courtreserve.service.VendorService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,9 @@ public class VendorController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private TournamentService tournamentService;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -120,7 +123,7 @@ public class VendorController {
         }
     }
 
-    @GetMapping("/getPending")
+    @GetMapping("/getPendingBookings")
     public ResponseEntity<?> getPendingBookings(
             @RequestParam Long id
     ) {
@@ -128,6 +131,23 @@ public class VendorController {
             var pendingBookings = bookingService.getPendingBooking(id);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(Map.of("message", "Pending Bookings returned", "pendingBookings", pendingBookings));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/getPendingTournaments")
+    public ResponseEntity<?> getPendingTournaments(
+            @RequestParam Long id
+    ) {
+        try {
+            var pendingTournaments = tournamentService.getPendingTournaments(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Pending Tournaments returned", "pendingTournaments", pendingTournaments));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -171,6 +191,23 @@ public class VendorController {
         }
     }
 
+    @PostMapping("/{tournamentId}/confirmTournament")
+    public ResponseEntity<?> confirmTournament(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var confirmedTournament = tournamentService.confirmTournament(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Tournament Confirmed", "confirmedTournament", confirmedTournament));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("/{bookingId}/rejectBooking")
     public ResponseEntity<?> rejectBooking(
             @PathVariable Long bookingId
@@ -179,6 +216,23 @@ public class VendorController {
             var rejectedBooking = bookingService.rejectBooking(bookingId);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(Map.of("message", "Booking Rejected", "rejectedBooking", rejectedBooking));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/{tournamentId}/rejectTournament")
+    public ResponseEntity<?> rejectTournament(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var rejectedTournament = tournamentService.rejectTournament(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Tournament Rejected", "rejectedTournament", rejectedTournament));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {

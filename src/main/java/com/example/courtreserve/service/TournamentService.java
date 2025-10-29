@@ -12,8 +12,8 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class TournamentService {
@@ -32,8 +32,8 @@ public class TournamentService {
     public static class CreateTournamentRequest {
         private String name;
         private Long courtId;
-        private LocalDate startDate;
-        private LocalDate endDate;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
         private Integer prize;
     }
 
@@ -45,8 +45,8 @@ public class TournamentService {
         private String sport;
         private Long organizerId;
         private Long courtId;
-        private LocalDate startDate;
-        private LocalDate endDate;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
         private String status;
         private Integer prize;
         private LocalDateTime created;
@@ -69,7 +69,7 @@ public class TournamentService {
                 .court(court)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .status("PENDING APPROVAL")
+                .status("PENDING")
                 .prize(request.getPrize())
                 .created(LocalDateTime.now())
                 .build();
@@ -88,5 +88,50 @@ public class TournamentService {
                 savedTournament.getPrize(),
                 savedTournament.getCreated()
         );
+    }
+
+    public List<Tournament> getPendingTournaments(Long vendorId) {
+        userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+
+        List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
+
+        return tournamentRepository.findPendingTournaments(courtIds);
+    }
+
+    public Tournament confirmTournament(Long tournamentId) {
+        Tournament pendingTournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (pendingTournament.getStartDate().isAfter(now)) {
+            pendingTournament.setStatus("CONFIRMED");
+        } else {
+            pendingTournament.setStatus("EXPIRED");
+        }
+
+        tournamentRepository.save(pendingTournament);
+
+        return pendingTournament;
+    }
+
+    public Tournament rejectTournament(Long TournamentId) {
+        Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+
+        pendingTournament.setStatus("REJECTED");
+
+        tournamentRepository.save(pendingTournament);
+
+        return pendingTournament;
+    }
+
+    public Tournament cancelTournament(Long TournamentId) {
+        Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+
+        pendingTournament.setStatus("CANCELED");
+
+        tournamentRepository.save(pendingTournament);
+
+        return pendingTournament;
     }
 }

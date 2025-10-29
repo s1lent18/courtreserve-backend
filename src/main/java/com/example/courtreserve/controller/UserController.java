@@ -245,4 +245,21 @@ public class UserController {
             throw new RuntimeException(e);
         }
     }
+
+    @PostMapping("/{tournamentId}/cancelTournament")
+    public ResponseEntity<?> cancelTournament(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var canceledTournament = tournamentService.rejectTournament(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Tournament Canceled", "canceledTournament", canceledTournament));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
