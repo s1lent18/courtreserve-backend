@@ -146,6 +146,23 @@ public class UserController {
         }
     }
 
+    @GetMapping("/getAllBookings")
+    public ResponseEntity<?> getAllBookings(
+            @RequestParam Long id
+    ) {
+        try {
+            var getBookings = bookingService.getAllBookings(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Bookings returned successfully", "bookings", getBookings));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("/createReview")
     public ResponseEntity<?> createReview(
         @RequestBody ReviewService.AddReviewRequest request
@@ -229,14 +246,14 @@ public class UserController {
         }
     }
 
-    @PostMapping("/{bookingId}/cancelBooking")
-    public ResponseEntity<?> cancelBooking(
-            @PathVariable Long bookingId
+    @PostMapping("/{tournamentId}/cancelTournament")
+    public ResponseEntity<?> cancelTournament(
+            @PathVariable Long tournamentId
     ) {
         try {
-            var canceledBooking = bookingService.rejectBooking(bookingId);
+            var canceledTournament = tournamentService.rejectTournament(tournamentId);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Canceled", "canceledBooking", canceledBooking));
+                    .body(Map.of("message", "Tournament Canceled", "canceledTournament", canceledTournament));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -246,14 +263,14 @@ public class UserController {
         }
     }
 
-    @PostMapping("/{tournamentId}/cancelTournament")
-    public ResponseEntity<?> cancelTournament(
-            @PathVariable Long tournamentId
+    @PostMapping("/{bookingId}/cancelBooking")
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable Long bookingId
     ) {
         try {
-            var canceledTournament = tournamentService.rejectTournament(tournamentId);
+            var canceledBooking = bookingService.cancelBooking(bookingId);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Canceled", "canceledTournament", canceledTournament));
+                    .body(Map.of("message", "Booking Canceled", "canceledBooking", canceledBooking));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {

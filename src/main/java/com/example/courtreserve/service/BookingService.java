@@ -6,6 +6,7 @@ import com.example.courtreserve.database.models.User;
 import com.example.courtreserve.database.repository.BookingRepository;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.UserRepository;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,7 +40,9 @@ public class BookingService {
     public static class AddBookingRequest {
         Long userId;
         Long facilityId;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
         LocalDateTime startTime;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
         LocalDateTime endTime;
         Integer price;
         Integer advance;
@@ -59,9 +63,50 @@ public class BookingService {
         LocalDateTime created;
     }
 
+    @Getter @Setter
+    @AllArgsConstructor
+    public static class GetBookingResponse {
+        Long id;
+        Long courtId;
+        String courtName;
+        LocalDateTime startTime;
+        LocalDateTime endTime;
+        String status;
+        Integer price;
+        Integer advance;
+        Integer toBePaid;
+        LocalDateTime created;
+    }
+
     public interface BookingTimeProjection {
         LocalDateTime getStartTime();
         LocalDateTime getEndTime();
+    }
+
+    public List<GetBookingResponse> getAllBookings (Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User Not Found"));
+
+        List<Booking> bookings = bookingRepository.findAllByUser_Id(userId);
+        List<GetBookingResponse> getBookingResponses = new ArrayList<>();
+
+        for (Booking booking : bookings) {
+            GetBookingResponse getBookingResponse = new GetBookingResponse(
+                    booking.getId(),
+                    booking.getFacility().getId(),
+                    booking.getFacility().getName(),
+                    booking.getStartTime(),
+                    booking.getEndTime(),
+                    booking.getStatus(),
+                    booking.getPrice(),
+                    booking.getAdvance(),
+                    booking.getToBePaid(),
+                    booking.getCreated()
+            );
+
+            getBookingResponses.add(getBookingResponse);
+        }
+
+        return getBookingResponses;
     }
 
     public AddBookingResponse createBooking(AddBookingRequest request) {
