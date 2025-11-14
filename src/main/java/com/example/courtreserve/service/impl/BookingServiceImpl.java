@@ -11,6 +11,8 @@ import com.example.courtreserve.dto.AddBookingResponse;
 import com.example.courtreserve.dto.GetBookingResponse;
 import com.example.courtreserve.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ public class BookingServiceImpl implements BookingService {
         this.courtRepository = courtRepository;
     }
 
+    @Cacheable(value = "bookings", key = "#userId")
     public List<GetBookingResponse> getAllBookings (Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User Not Found"));
 
@@ -60,6 +63,7 @@ public class BookingServiceImpl implements BookingService {
         return getBookingResponses;
     }
 
+    @CacheEvict(value = "bookings", key = "#request.userId")
     public AddBookingResponse createBooking(AddBookingRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User Not Found"));
         Court court = courtRepository.findById(request.getFacilityId()).orElseThrow(() -> new RuntimeException("Court Not Found"));
@@ -100,6 +104,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.findPendingBookings(courtIds);
     }
 
+    @CacheEvict(value = "bookings", key = "#result.user.id")
     public Booking confirmBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
@@ -116,6 +121,7 @@ public class BookingServiceImpl implements BookingService {
         return pendingBooking;
     }
 
+    @CacheEvict(value = "bookings", key = "#result.user.id")
     public Booking rejectBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
@@ -126,6 +132,7 @@ public class BookingServiceImpl implements BookingService {
         return pendingBooking;
     }
 
+    @CacheEvict(value = "bookings", key = "#result.user.id")
     public Booking cancelBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
@@ -136,6 +143,7 @@ public class BookingServiceImpl implements BookingService {
         return pendingBooking;
     }
 
+    @CacheEvict(value = "bookings", allEntries = true)
     @Scheduled(cron = "0 0 0 * * *")
     public void checkExpiredBookings() {
         LocalDateTime now = LocalDateTime.now();
