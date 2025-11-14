@@ -1,6 +1,7 @@
 package com.example.courtreserve.database.repository;
 
 import com.example.courtreserve.database.models.Booking;
+import com.example.courtreserve.dto.BookingTimeProjection;
 import com.example.courtreserve.service.BookingService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b.startTime AS startTime, b.endTime AS endTime FROM Booking b WHERE b.facility.id = :courtId")
-    List<BookingService.BookingTimeProjection> findBookingTimesByCourtId(@Param("courtId") Long courtId);
+    List<BookingTimeProjection> findBookingTimesByCourtId(@Param("courtId") Long courtId);
 
     List<Booking> findAllByStartTimeBefore(LocalDateTime time);
 

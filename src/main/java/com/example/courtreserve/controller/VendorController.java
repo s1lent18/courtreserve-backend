@@ -1,6 +1,7 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
+import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.TournamentService;
@@ -45,13 +46,13 @@ public class VendorController {
     UserDetailsService userDetailsService;
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, VendorService.AddVendorResponse>> registerVendor(
-            @RequestBody VendorService.AddVendorRequest request
+    public ResponseEntity<Map<String, AddVendorResponse>> registerVendor(
+            @RequestBody AddVendorRequest request
     ) {
         try {
-            Map<String, VendorService.AddVendorResponse> response = new HashMap<>();
+            Map<String, AddVendorResponse> response = new HashMap<>();
 
-            VendorService.AddVendorResponse addUserResponse = vendorService.addNewVendor(request);
+            AddVendorResponse addUserResponse = vendorService.addNewVendor(request);
 
             response.put("registerVendorData", addUserResponse);
 
@@ -63,8 +64,8 @@ public class VendorController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, VendorService.LoginVendorResponse>> loginUser(
-            @RequestBody VendorService.LoginVendorRequest request
+    public ResponseEntity<Map<String, LoginVendorResponse>> loginUser(
+            @RequestBody LoginVendorRequest request
     ) {
         try {
             authenticationManager.authenticate(
@@ -73,11 +74,11 @@ public class VendorController {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
 
-            VendorService.LoginVendorResponse req = vendorService.getVendor(request.getEmail());
+            LoginVendorResponse req = vendorService.getVendor(request.getEmail());
 
             req.setToken(jwtUtil.generateToken(userDetails));
 
-            Map<String, VendorService.LoginVendorResponse> response = new HashMap<>();
+            Map<String, LoginVendorResponse> response = new HashMap<>();
 
             response.put("vendorData", req);
 
@@ -91,7 +92,7 @@ public class VendorController {
     @PreAuthorize("hasRole('VENDOR')")
     public ResponseEntity<?> registerCourt(
         @PathVariable Long vendorId,
-        @RequestBody CourtService.AddCourtRequest request
+        @RequestBody AddCourtRequest request
     ) {
         try {
             var court = courtService.addCourt(vendorId, request);

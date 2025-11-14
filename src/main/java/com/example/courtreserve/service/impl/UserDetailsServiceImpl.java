@@ -1,4 +1,4 @@
-package com.example.courtreserve.service;
+package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.User;
 import com.example.courtreserve.database.repository.UserRepository;

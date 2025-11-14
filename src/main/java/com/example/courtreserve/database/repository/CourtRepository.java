@@ -1,6 +1,7 @@
 package com.example.courtreserve.database.repository;
 
 import com.example.courtreserve.database.models.Court;
+import com.example.courtreserve.dto.GetPopularCourts;
 import com.example.courtreserve.service.CourtService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,7 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
         SELECT COUNT(*) FROM courts c1 WHERE c1.location = :location
     """,
             nativeQuery = true)
-    Page<CourtService.GetPopularCourts> findCourtStatsByCount(@Param("location") String location, Pageable pageable);
+    Page<GetPopularCourts> findCourtStatsByCount(@Param("location") String location, Pageable pageable);
 
     @Query(value = """
     SELECT
@@ -67,7 +68,7 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
         SELECT COUNT(*) FROM courts c1 WHERE c1.id = :id
     """,
             nativeQuery = true)
-    CourtService.GetPopularCourts findByPopularId(@Param("id") Long id);
+    GetPopularCourts findByPopularId(@Param("id") Long id);
 
     @Query(value = """
     SELECT
@@ -95,7 +96,7 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
         SELECT COUNT(*) FROM courts c1 WHERE c1.vendor_id = :id
     """,
             nativeQuery = true)
-    List<CourtService.GetPopularCourts> findAllOfSingleVendor(@Param("id") Long id);
+    List<GetPopularCourts> findAllOfSingleVendor(@Param("id") Long id);
 
     @Query("SELECT c.id FROM Court c WHERE c.vendor.id = :vendorId")
     List<Long> findCourtIdsByVendorId(@Param("vendorId") Long vendorId);

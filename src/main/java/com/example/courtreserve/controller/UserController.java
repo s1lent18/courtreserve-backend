@@ -2,6 +2,7 @@ package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
 import com.example.courtreserve.database.repository.CourtRepository;
+import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
 import com.example.courtreserve.service.ReviewService;
@@ -69,13 +70,13 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, UserService.AddUserResponse>> registerUser(
-            @RequestBody UserService.AddUserRequest request
+    public ResponseEntity<Map<String, AddUserResponse>> registerUser(
+            @RequestBody AddUserRequest request
     ) {
         try {
-            Map<String, UserService.AddUserResponse> response = new HashMap<>();
+            Map<String, AddUserResponse> response = new HashMap<>();
 
-            UserService.AddUserResponse addUserResponse = userService.addNewUser(request);
+            AddUserResponse addUserResponse = userService.addNewUser(request);
 
             response.put("registerUserData", addUserResponse);
 
@@ -87,8 +88,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, UserService.LoginUserResponse>> loginUser(
-            @RequestBody UserService.LoginUserRequest request
+    public ResponseEntity<Map<String, LoginUserResponse>> loginUser(
+            @RequestBody LoginUserRequest request
     ) {
         try {
             authenticationManager.authenticate(
@@ -97,11 +98,11 @@ public class UserController {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
 
-            UserService.LoginUserResponse req = userService.getUser(request.getEmail());
+            LoginUserResponse req = userService.getUser(request.getEmail());
 
             req.setToken(jwtUtil.generateToken(userDetails));
 
-            Map<String, UserService.LoginUserResponse> response = new HashMap<>();
+            Map<String, LoginUserResponse> response = new HashMap<>();
 
             response.put("userData", req);
 
@@ -118,7 +119,7 @@ public class UserController {
             @RequestParam String location
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CourtService.GetPopularCourts> courtsPage = courtRepository.findCourtStatsByCount(location, pageable);
+        Page<GetPopularCourts> courtsPage = courtRepository.findCourtStatsByCount(location, pageable);
 
         Map<String, Object> response = new HashMap<>();
         response.put("courts", courtsPage.getContent());
@@ -131,7 +132,7 @@ public class UserController {
 
     @PostMapping("/createBooking")
     public ResponseEntity<?> createBooking(
-        @RequestBody BookingService.AddBookingRequest request
+        @RequestBody AddBookingRequest request
     ) {
         try {
             var booking = bookingService.createBooking(request);
@@ -165,7 +166,7 @@ public class UserController {
 
     @PostMapping("/createReview")
     public ResponseEntity<?> createReview(
-        @RequestBody ReviewService.AddReviewRequest request
+        @RequestBody AddReviewRequest request
     ) {
         try {
             var review = reviewService.addReview(request);
@@ -199,7 +200,7 @@ public class UserController {
 
     @PostMapping("/createTournament")
     public ResponseEntity<?> createTournament(
-            @RequestBody TournamentService.CreateTournamentRequest request,
+            @RequestBody CreateTournamentRequest request,
             @RequestParam Long organizerId
     ) {
         try {
@@ -217,7 +218,7 @@ public class UserController {
 
     @PostMapping("/createTeam")
     public ResponseEntity<?> createTeam(
-            @RequestBody TeamService.CreateTeamRequest request,
+            @RequestBody CreateTeamRequest request,
             @RequestParam Long captainId
     ) {
         try {
@@ -233,7 +234,7 @@ public class UserController {
 
     @PostMapping("/joinTournament")
     public ResponseEntity<?> joinTournament(
-            @RequestBody TeamService.JoinTournamentRequest request
+            @RequestBody JoinTournamentRequest request
     ) {
         try {
             var participation = teamService.joinTournament(request);
