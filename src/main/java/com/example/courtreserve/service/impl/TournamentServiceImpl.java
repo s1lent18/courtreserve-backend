@@ -12,6 +12,7 @@ import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -77,7 +78,7 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament pendingTournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         if (pendingTournament.getStartDate().isAfter(now)) {
             pendingTournament.setStatus("CONFIRMED");

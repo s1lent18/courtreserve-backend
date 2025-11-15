@@ -6,13 +6,14 @@ import com.example.courtreserve.dto.CreateTeamRequest;
 import com.example.courtreserve.dto.CreateTeamResponse;
 import com.example.courtreserve.dto.JoinTournamentRequest;
 import com.example.courtreserve.dto.JoinTournamentResponse;
+import com.example.courtreserve.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
-public class TeamServiceImpl {
+public class TeamServiceImpl implements TeamService {
 
     @Autowired
     private UserRepository userRepository;

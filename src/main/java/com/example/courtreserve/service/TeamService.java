@@ -8,7 +8,6 @@ import com.example.courtreserve.dto.JoinTournamentResponse;
 
 public interface TeamService {
 
-
     CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request);
 
     JoinTournamentResponse joinTournament(JoinTournamentRequest request);
