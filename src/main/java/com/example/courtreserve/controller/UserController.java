@@ -280,4 +280,30 @@ public class UserController {
             throw new RuntimeException(e);
         }
     }
+
+    @GetMapping("/getAllTournaments")
+    public ResponseEntity<?> getAllTournaments(
+            @RequestParam String location,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            var tournaments = tournamentService.getAllTournaments(location, page, size);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of(
+                            "message", "All Tournaments Obtained",
+                            "page", tournaments.getNumber(),
+                            "size", tournaments.getSize(),
+                            "totalPages", tournaments.getTotalPages(),
+                            "totalElements", tournaments.getTotalElements(),
+                            "content", tournaments.getContent()
+                    ));
+
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
 }
