@@ -2,15 +2,14 @@ package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.*;
-import com.example.courtreserve.dto.CreateTeamRequest;
-import com.example.courtreserve.dto.CreateTeamResponse;
-import com.example.courtreserve.dto.JoinTournamentRequest;
-import com.example.courtreserve.dto.JoinTournamentResponse;
+import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -30,6 +29,7 @@ public class TeamServiceImpl implements TeamService {
     @Autowired
     private TournamentTeamRepository tournamentTeamRepository;
 
+    @Override
     public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
         // Find the captain
         User captain = userRepository.findById(captainId)
@@ -125,6 +125,32 @@ public class TeamServiceImpl implements TeamService {
                 request.getTeamId(),
                 team.getName(),
                 LocalDateTime.now()
+        );
+    }
+
+    @Override
+    public GetSingleTeamResponse getSingleTeam(Long id) {
+        Team team = teamRepository.findById(id).orElseThrow(() -> new RuntimeException("Team not Found"));
+
+        List<GetTeamMembers> members = new ArrayList<>();
+
+        for (TeamMember teamMember : team.getMembers()) {
+            GetTeamMembers member = new GetTeamMembers(
+                    teamMember.getId(),
+                    teamMember.getUser().getId(),
+                    teamMember.getUser().getName(),
+                    teamMember.getRole()
+            );
+            members.add(member);
+        }
+
+        return new GetSingleTeamResponse(
+                team.getId(),
+                team.getName(),
+                team.getSport(),
+                team.getCaptain().getId(),
+                team.getCaptain().getName(),
+                members
         );
     }
 }

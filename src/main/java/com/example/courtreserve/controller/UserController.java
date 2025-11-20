@@ -306,4 +306,34 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/getSingleTournament")
+    public ResponseEntity<?> getSingleTournament(
+            @RequestParam Long Id
+    ) {
+        try {
+            var tournament = tournamentService.getSingleTournament(Id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Single Tournament Returned", "singleTournament", tournament));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/getSingleTeam")
+    public ResponseEntity<?> getSingleTeam(
+            @RequestParam Long Id
+    ) {
+        try {
+            var team = teamService.getSingleTeam(Id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Single Team Returned", "singleTeam", team));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

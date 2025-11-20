@@ -1,10 +1,7 @@
 package com.example.courtreserve.service;
 
 
-import com.example.courtreserve.dto.CreateTeamRequest;
-import com.example.courtreserve.dto.CreateTeamResponse;
-import com.example.courtreserve.dto.JoinTournamentRequest;
-import com.example.courtreserve.dto.JoinTournamentResponse;
+import com.example.courtreserve.dto.*;
 
 public interface TeamService {
 
@@ -12,4 +9,5 @@ public interface TeamService {
 
     JoinTournamentResponse joinTournament(JoinTournamentRequest request);
 
+    GetSingleTeamResponse getSingleTeam(Long id);
 }

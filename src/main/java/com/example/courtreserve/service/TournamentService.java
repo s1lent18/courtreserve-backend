@@ -3,6 +3,7 @@ package com.example.courtreserve.service;
 import com.example.courtreserve.database.models.Tournament;
 import com.example.courtreserve.dto.CreateTournamentRequest;
 import com.example.courtreserve.dto.CreateTournamentResponse;
+import com.example.courtreserve.dto.GetSingleTournamentResponse;
 import com.example.courtreserve.dto.GetTournamentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,4 +23,6 @@ public interface TournamentService {
     Tournament cancelTournament(Long TournamentId);
 
     Page<GetTournamentResponse> getAllTournaments(String location, int page, int size);
+
+    GetSingleTournamentResponse getSingleTournament(Long Id);
 }

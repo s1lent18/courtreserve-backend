@@ -1,13 +1,12 @@
 package com.example.courtreserve.service.impl;
 
-import com.example.courtreserve.database.models.Court;
-import com.example.courtreserve.database.models.Tournament;
-import com.example.courtreserve.database.models.User;
+import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.TournamentRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.CreateTournamentRequest;
 import com.example.courtreserve.dto.CreateTournamentResponse;
+import com.example.courtreserve.dto.GetSingleTournamentResponse;
 import com.example.courtreserve.dto.GetTournamentResponse;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,8 +129,7 @@ public class TournamentServiceImpl implements TournamentService {
         Page<Tournament> tournaments =
                 tournamentRepository.findAllByCourt_Location(location, pageable);
 
-        // Convert Tournament -> GetTournamentResponse
-        Page<GetTournamentResponse> responsePage = tournaments.map(tournament -> {
+        return tournaments.map(tournament -> {
             if (!tournament.getStatus().equals("CONFIRMED")) return null;
 
             return new GetTournamentResponse(
@@ -150,7 +148,32 @@ public class TournamentServiceImpl implements TournamentService {
                     tournament.getRegisteredTeams()
             );
         });
+    }
 
-        return responsePage;
+    @Override
+    public GetSingleTournamentResponse getSingleTournament(Long Id) {
+
+        Tournament tournament = tournamentRepository.findById(Id).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+
+        List<Team> teams = new ArrayList<>();
+
+        for (TournamentTeam tournamentTeam : tournament.getRegisteredTeams()) {
+            teams.add(tournamentTeam.getTeam());
+        }
+
+        return new GetSingleTournamentResponse(
+                tournament.getId(),
+                tournament.getName(),
+                tournament.getSport(),
+                tournament.getOrganizer().getId(),
+                tournament.getOrganizer().getName(),
+                tournament.getCourt().getId(),
+                tournament.getCourt().getName(),
+                tournament.getStartDate(),
+                tournament.getEndDate(),
+                tournament.getStatus(),
+                tournament.getPrize(),
+                teams
+        );
     }
 }
