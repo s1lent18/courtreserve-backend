@@ -22,5 +22,5 @@ public class GetSingleTournamentResponse {
     LocalDate endDate;
     String status;
     Integer prize;
-    List<Team> tournamentTeams;
+    List<Long> tournamentTeams;
 }

@@ -155,10 +155,10 @@ public class TournamentServiceImpl implements TournamentService {
 
         Tournament tournament = tournamentRepository.findById(Id).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
-        List<Team> teams = new ArrayList<>();
+        List<Long> teams = new ArrayList<>();
 
         for (TournamentTeam tournamentTeam : tournament.getRegisteredTeams()) {
-            teams.add(tournamentTeam.getTeam());
+            teams.add(tournamentTeam.getTeam().getId());
         }
 
         return new GetSingleTournamentResponse(
