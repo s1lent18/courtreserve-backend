@@ -10,4 +10,10 @@ public interface TeamService {
     JoinTournamentResponse joinTournament(JoinTournamentRequest request);
 
     GetSingleTeamResponse getSingleTeam(Long id);
+
+    TeamMemberResponse addTeamMember(AddTeamMemberRequest request);
+
+    void removeTeamMember(RemoveTeamMemberRequest request);
+
+    TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request);
 }

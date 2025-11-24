@@ -37,4 +37,24 @@ public class Match {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status;
+
+    private Integer round; // Round number (1 for first round, 2 for second, etc.)
+
+    @Column(name = "bracket_type")
+    private String bracketType; // "WINNER" for main bracket, "LOSER" for losers bracket in double elimination
+
+    @Column(name = "match_position")
+    private Integer matchPosition; // Position in the current round
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "winner_team_id")
+    private Team winnerTeam;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_winner_match_id")
+    private Match nextWinnerMatch; // Next match for winner
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_loser_match_id")
+    private Match nextLoserMatch; // Next match for loser (used in double elimination)
 }

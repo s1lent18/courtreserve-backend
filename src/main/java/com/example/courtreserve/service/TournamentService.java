@@ -6,7 +6,6 @@ import com.example.courtreserve.dto.CreateTournamentResponse;
 import com.example.courtreserve.dto.GetSingleTournamentResponse;
 import com.example.courtreserve.dto.GetTournamentResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -25,4 +24,6 @@ public interface TournamentService {
     Page<GetTournamentResponse> getAllTournaments(String location, int page, int size);
 
     GetSingleTournamentResponse getSingleTournament(Long Id);
+
+    Tournament startTournament(Long tournamentId);
 }

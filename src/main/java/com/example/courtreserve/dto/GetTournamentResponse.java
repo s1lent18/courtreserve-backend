@@ -27,4 +27,6 @@ public class GetTournamentResponse {
     Integer prize;
     LocalDateTime created;
     List<TournamentTeam> teams;
+    String eliminationType;
+    Boolean isAutoMode;
 }

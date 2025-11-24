@@ -8,6 +8,7 @@ import com.example.courtreserve.dto.CreateTournamentRequest;
 import com.example.courtreserve.dto.CreateTournamentResponse;
 import com.example.courtreserve.dto.GetSingleTournamentResponse;
 import com.example.courtreserve.dto.GetTournamentResponse;
+import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -32,6 +32,9 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Autowired
     private TournamentRepository tournamentRepository;
+
+    @Autowired
+    private MatchService matchService;
 
     @Override
     public CreateTournamentResponse createTournament(Long organizerId, CreateTournamentRequest request) {
@@ -53,6 +56,8 @@ public class TournamentServiceImpl implements TournamentService {
                 .endDate(request.getEndDate())
                 .status("PENDING")
                 .prize(request.getPrize())
+                .eliminationType(request.getEliminationType() != null ? request.getEliminationType() : "SINGLE")
+                .isAutoMode(request.getIsAutoMode() != null ? request.getIsAutoMode() : true)
                 .created(LocalDateTime.now())
                 .build();
 
@@ -68,7 +73,9 @@ public class TournamentServiceImpl implements TournamentService {
                 savedTournament.getEndDate(),
                 savedTournament.getStatus(),
                 savedTournament.getPrize(),
-                savedTournament.getCreated()
+                savedTournament.getCreated(),
+                savedTournament.getEliminationType(),
+                savedTournament.getIsAutoMode()
         );
     }
 
@@ -145,7 +152,9 @@ public class TournamentServiceImpl implements TournamentService {
                     tournament.getStatus(),
                     tournament.getPrize(),
                     tournament.getCreated(),
-                    tournament.getRegisteredTeams()
+                    tournament.getRegisteredTeams(),
+                    tournament.getEliminationType(),
+                    tournament.getIsAutoMode()
             );
         });
     }
@@ -173,7 +182,25 @@ public class TournamentServiceImpl implements TournamentService {
                 tournament.getEndDate(),
                 tournament.getStatus(),
                 tournament.getPrize(),
-                teams
+                teams,
+                tournament.getEliminationType(),
+                tournament.getIsAutoMode()
         );
+    }
+
+    @Override
+    public Tournament startTournament(Long tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+
+        if (!"CONFIRMED".equals(tournament.getStatus())) {
+            throw new RuntimeException("Tournament must be confirmed before starting");
+        }
+
+        // Generate bracket
+        matchService.generateBracket(tournamentId);
+
+        // Tournament status is updated to IN_PROGRESS by generateBracket
+        return tournamentRepository.findById(tournamentId).orElseThrow();
     }
 }

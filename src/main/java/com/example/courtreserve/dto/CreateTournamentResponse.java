@@ -21,4 +21,6 @@ public class CreateTournamentResponse {
     private String status;
     private Integer prize;
     private LocalDateTime created;
+    private String eliminationType;
+    private Boolean isAutoMode;
 }

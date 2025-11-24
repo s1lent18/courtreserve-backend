@@ -1,6 +1,5 @@
 package com.example.courtreserve.database.repository;
 
-import com.example.courtreserve.database.models.Booking;
 import com.example.courtreserve.database.models.Court;
 import com.example.courtreserve.database.models.Tournament;
 import com.example.courtreserve.database.models.User;
