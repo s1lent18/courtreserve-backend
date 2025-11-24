@@ -44,6 +44,12 @@ public class Tournament {
 
     private LocalDateTime created;
 
+    @Column(name = "elimination_type")
+    private String eliminationType; // "SINGLE" or "DOUBLE"
+
+    @Column(name = "is_auto_mode")
+    private Boolean isAutoMode; // true for automatic match handling, false for manual
+
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentTeam> registeredTeams;
 }

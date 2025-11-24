@@ -5,6 +5,7 @@ import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.BookingService;
 import com.example.courtreserve.service.CourtService;
+import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.ReviewService;
 import com.example.courtreserve.service.TeamService;
 import com.example.courtreserve.service.TournamentService;
@@ -49,6 +50,9 @@ public class UserController {
 
     @Autowired
     private final TeamService teamService;
+
+    @Autowired
+    private MatchService matchService;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -333,6 +337,141 @@ public class UserController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{tournamentId}/startTournament")
+    public ResponseEntity<?> startTournament(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var tournament = tournamentService.startTournament(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Tournament started and bracket generated", "tournament", tournament));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{tournamentId}/bracket")
+    public ResponseEntity<?> getTournamentBracket(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var bracket = matchService.getTournamentBracket(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Tournament bracket retrieved", "bracket", bracket));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/match/schedule")
+    public ResponseEntity<?> scheduleMatch(
+            @RequestBody ScheduleMatchRequest request
+    ) {
+        try {
+            var match = matchService.scheduleMatch(request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Match scheduled successfully", "match", match));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/match/updateResult")
+    public ResponseEntity<?> updateMatchResult(
+            @RequestBody UpdateMatchResultRequest request
+    ) {
+        try {
+            var match = matchService.updateMatchResult(request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Match result updated successfully", "match", match));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{tournamentId}/unscheduledMatches")
+    public ResponseEntity<?> getUnscheduledMatches(
+            @PathVariable Long tournamentId
+    ) {
+        try {
+            var matches = matchService.getUnscheduledMatches(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Unscheduled matches retrieved", "matches", matches));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/match/{matchId}")
+    public ResponseEntity<?> getMatchById(
+            @PathVariable Long matchId
+    ) {
+        try {
+            var match = matchService.getMatchById(matchId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Match retrieved successfully", "match", match));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/team/addMember")
+    public ResponseEntity<?> addTeamMember(
+            @RequestBody AddTeamMemberRequest request
+    ) {
+        try {
+            var member = teamService.addTeamMember(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Team member added successfully", "member", member));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/team/removeMember")
+    public ResponseEntity<?> removeTeamMember(
+            @RequestBody RemoveTeamMemberRequest request
+    ) {
+        try {
+            teamService.removeTeamMember(request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Team member removed successfully"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/team/updateMember")
+    public ResponseEntity<?> updateTeamMember(
+            @RequestBody UpdateTeamMemberRequest request
+    ) {
+        try {
+            var member = teamService.updateTeamMember(request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Team member updated successfully", "member", member));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }

@@ -1,6 +1,5 @@
 package com.example.courtreserve.dto;
 
-import com.example.courtreserve.database.models.Team;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,4 +22,6 @@ public class GetSingleTournamentResponse {
     String status;
     Integer prize;
     List<Long> tournamentTeams;
+    String eliminationType;
+    Boolean isAutoMode;
 }

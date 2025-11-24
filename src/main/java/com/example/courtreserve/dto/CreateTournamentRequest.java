@@ -15,4 +15,6 @@ public class CreateTournamentRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer prize;
+    private String eliminationType; // "SINGLE" or "DOUBLE"
+    private Boolean isAutoMode; // true for automatic, false for manual
 }
