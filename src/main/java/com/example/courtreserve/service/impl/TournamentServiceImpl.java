@@ -4,10 +4,7 @@ import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.TournamentRepository;
 import com.example.courtreserve.database.repository.UserRepository;
-import com.example.courtreserve.dto.CreateTournamentRequest;
-import com.example.courtreserve.dto.CreateTournamentResponse;
-import com.example.courtreserve.dto.GetSingleTournamentResponse;
-import com.example.courtreserve.dto.GetTournamentResponse;
+import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -56,8 +54,6 @@ public class TournamentServiceImpl implements TournamentService {
                 .endDate(request.getEndDate())
                 .status("PENDING")
                 .prize(request.getPrize())
-                .eliminationType(request.getEliminationType() != null ? request.getEliminationType() : "SINGLE")
-                .isAutoMode(request.getIsAutoMode() != null ? request.getIsAutoMode() : true)
                 .created(LocalDateTime.now())
                 .build();
 
@@ -164,10 +160,14 @@ public class TournamentServiceImpl implements TournamentService {
 
         Tournament tournament = tournamentRepository.findById(Id).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
-        List<Long> teams = new ArrayList<>();
+        List<GetTournamentTeam> teams = new ArrayList<>();
 
         for (TournamentTeam tournamentTeam : tournament.getRegisteredTeams()) {
-            teams.add(tournamentTeam.getTeam().getId());
+            GetTournamentTeam team = new GetTournamentTeam(
+                    tournamentTeam.getTeam().getId(),
+                    tournamentTeam.getTeam().getName()
+            );
+            teams.add(team);
         }
 
         return new GetSingleTournamentResponse(

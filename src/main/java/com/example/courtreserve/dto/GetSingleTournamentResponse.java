@@ -21,7 +21,7 @@ public class GetSingleTournamentResponse {
     LocalDate endDate;
     String status;
     Integer prize;
-    List<Long> tournamentTeams;
+    List<GetTournamentTeam> tournamentTeams;
     String eliminationType;
     Boolean isAutoMode;
 }
