@@ -1,6 +1,7 @@
 package com.example.courtreserve.dto;
 
 import com.example.courtreserve.database.models.TournamentTeam;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -26,6 +27,7 @@ public class GetTournamentResponse {
     String status;
     Integer prize;
     LocalDateTime created;
+    @Schema(type = "array", implementation = Object.class)
     List<TournamentTeam> teams;
     String eliminationType;
     Boolean isAutoMode;

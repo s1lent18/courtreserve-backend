@@ -1,5 +1,6 @@
 package com.example.courtreserve.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,5 +17,6 @@ public class CreateTeamResponse {
     private String sport;
     private Long captainId;
     private LocalDateTime created;
+    @Schema(type = "array", implementation = Long.class)
     private List<Long> memberIds;
 }

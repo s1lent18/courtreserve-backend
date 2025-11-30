@@ -1,5 +1,6 @@
 package com.example.courtreserve.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ public class GetSingleTournamentResponse {
     LocalDate endDate;
     String status;
     Integer prize;
+    @Schema(type = "array", implementation = Object.class)
     List<GetTournamentTeam> tournamentTeams;
     String eliminationType;
     Boolean isAutoMode;

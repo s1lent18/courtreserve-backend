@@ -53,4 +53,7 @@ public class Court {
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Booking> bookings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourtImages> images = new ArrayList<>();
 }

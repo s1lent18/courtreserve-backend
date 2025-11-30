@@ -25,25 +25,16 @@ import java.util.Map;
 public class VendorController {
 
     @Autowired
-    private VendorService vendorService;
+    JwtUtil jwtUtil;
 
     @Autowired
-    private CourtService courtService;
-
-    @Autowired
-    private BookingService bookingService;
-
-    @Autowired
-    private TournamentService tournamentService;
+    UserDetailsService userDetailsService;
 
     @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
-    JwtUtil jwtUtil;
-
-    @Autowired
-    UserDetailsService userDetailsService;
+    private VendorService vendorService;
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, AddVendorResponse>> registerVendor(
@@ -83,161 +74,6 @@ public class VendorController {
             response.put("vendorData", req);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/{vendorId}/addCourt")
-    @PreAuthorize("hasRole('VENDOR')")
-    public ResponseEntity<?> registerCourt(
-        @PathVariable Long vendorId,
-        @RequestBody AddCourtRequest request
-    ) {
-        try {
-            var court = courtService.addCourt(vendorId, request);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "Court added successfully", "court", court));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @GetMapping("/getVendorCourts")
-    public ResponseEntity<?> getCourtsByVendor(
-            @RequestParam Long id
-    ) {
-        try {
-            var court = courtService.getCourtsOfVendor(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Courts Found Successfully", "court", court));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @GetMapping("/getPendingBookings")
-    public ResponseEntity<?> getPendingBookings(
-            @RequestParam Long id
-    ) {
-        try {
-            var pendingBookings = bookingService.getPendingBooking(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Pending Bookings returned", "pendingBookings", pendingBookings));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @GetMapping("/getPendingTournaments")
-    public ResponseEntity<?> getPendingTournaments(
-            @RequestParam Long id
-    ) {
-        try {
-            var pendingTournaments = tournamentService.getPendingTournaments(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Pending Tournaments returned", "pendingTournaments", pendingTournaments));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @GetMapping("/getSingleCourt")
-    public ResponseEntity<?> getSingleCourt(
-            @RequestParam Long id
-    ) {
-        try {
-            var singleCourt = courtService.getVendorCourtById(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Single Court Returned", "court", singleCourt));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/{bookingId}/confirmBooking")
-    public ResponseEntity<?> confirmBooking(
-            @PathVariable Long bookingId
-    ) {
-        try {
-            var confirmedBooking = bookingService.confirmBooking(bookingId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Confirmed", "confirmedBooking", confirmedBooking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/{tournamentId}/confirmTournament")
-    public ResponseEntity<?> confirmTournament(
-            @PathVariable Long tournamentId
-    ) {
-        try {
-            var confirmedTournament = tournamentService.confirmTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Confirmed", "confirmedTournament", confirmedTournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/{bookingId}/rejectBooking")
-    public ResponseEntity<?> rejectBooking(
-            @PathVariable Long bookingId
-    ) {
-        try {
-            var rejectedBooking = bookingService.rejectBooking(bookingId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Rejected", "rejectedBooking", rejectedBooking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/{tournamentId}/rejectTournament")
-    public ResponseEntity<?> rejectTournament(
-            @PathVariable Long tournamentId
-    ) {
-        try {
-            var rejectedTournament = tournamentService.rejectTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Rejected", "rejectedTournament", rejectedTournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }

@@ -1,6 +1,7 @@
 package com.example.courtreserve.dto;
 
 import com.example.courtreserve.database.models.Booking;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,5 +23,6 @@ public class GetSingleCourtVendorResponse {
     LocalTime openTime;
     Integer price;
     String type;
+    @Schema(type = "array", implementation = Object.class)
     List<Booking> bookings;
 }

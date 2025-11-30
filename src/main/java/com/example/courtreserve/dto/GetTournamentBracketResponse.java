@@ -1,5 +1,6 @@
 package com.example.courtreserve.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,9 @@ public class GetTournamentBracketResponse {
     private String eliminationType;
     private Boolean isAutoMode;
     private String status;
+    @Schema(type = "array", implementation = Object.class)
     private List<GetMatchResponse> winnerBracketMatches;
+    @Schema(type = "array", implementation = Object.class)
     private List<GetMatchResponse> loserBracketMatches; // Only for double elimination
 }
 
