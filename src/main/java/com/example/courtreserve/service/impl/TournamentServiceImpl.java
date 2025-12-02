@@ -2,7 +2,9 @@ package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.CourtRepository;
+import com.example.courtreserve.database.repository.TeamRepository;
 import com.example.courtreserve.database.repository.TournamentRepository;
+import com.example.courtreserve.database.repository.TournamentTeamRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.MatchService;
@@ -12,12 +14,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -32,9 +34,16 @@ public class TournamentServiceImpl implements TournamentService {
     private TournamentRepository tournamentRepository;
 
     @Autowired
+    private TeamRepository teamRepository;
+
+    @Autowired
+    private TournamentTeamRepository tournamentTeamRepository;
+
+    @Autowired
     private MatchService matchService;
 
     @Override
+    @Transactional
     public CreateTournamentResponse createTournament(Long organizerId, CreateTournamentRequest request) {
         // Find the organizer
         User organizer = userRepository.findById(organizerId)
@@ -43,6 +52,13 @@ public class TournamentServiceImpl implements TournamentService {
         // Find the court
         Court court = courtRepository.findById(request.getCourtId())
                 .orElseThrow(() -> new RuntimeException("Court not found"));
+
+        // Validate elimination type
+        if (request.getEliminationType() != null && 
+            !request.getEliminationType().equals("SINGLE") && 
+            !request.getEliminationType().equals("DOUBLE")) {
+            throw new RuntimeException("Invalid elimination type. Must be 'SINGLE' or 'DOUBLE'");
+        }
 
         // Create tournament with PENDING APPROVAL status
         Tournament tournament = Tournament.builder()
@@ -55,9 +71,18 @@ public class TournamentServiceImpl implements TournamentService {
                 .status("PENDING")
                 .prize(request.getPrize())
                 .created(LocalDateTime.now())
+                .eliminationType(request.getEliminationType())
+                .isAutoMode(request.getIsAutoMode() != null ? request.getIsAutoMode() : false)
                 .build();
 
         Tournament savedTournament = tournamentRepository.save(tournament);
+
+        // Register teams if provided
+        if (request.getTeamIds() != null && !request.getTeamIds().isEmpty()) {
+            registerTeamsForTournament(savedTournament, request.getTeamIds());
+            // Refresh tournament to get registered teams
+            savedTournament = tournamentRepository.findById(savedTournament.getId()).orElseThrow();
+        }
 
         return new CreateTournamentResponse(
                 savedTournament.getId(),
@@ -162,7 +187,9 @@ public class TournamentServiceImpl implements TournamentService {
 
         List<GetTournamentTeam> teams = new ArrayList<>();
 
-        for (TournamentTeam tournamentTeam : tournament.getRegisteredTeams()) {
+        // Query tournament teams directly from repository
+        List<TournamentTeam> tournamentTeams = tournamentTeamRepository.findByTournament(tournament);
+        for (TournamentTeam tournamentTeam : tournamentTeams) {
             GetTournamentTeam team = new GetTournamentTeam(
                     tournamentTeam.getTeam().getId(),
                     tournamentTeam.getTeam().getName()
@@ -202,5 +229,35 @@ public class TournamentServiceImpl implements TournamentService {
 
         // Tournament status is updated to IN_PROGRESS by generateBracket
         return tournamentRepository.findById(tournamentId).orElseThrow();
+    }
+
+    /**
+     * Helper method to register teams for a tournament
+     */
+    private void registerTeamsForTournament(Tournament tournament, List<Long> teamIds) {
+        for (Long teamId : teamIds) {
+            Team team = teamRepository.findById(teamId)
+                    .orElseThrow(() -> new RuntimeException("Team with ID " + teamId + " not found"));
+
+            // Check if team sport matches tournament sport
+            if (!team.getSport().equalsIgnoreCase(tournament.getSport())) {
+                throw new RuntimeException("Team '" + team.getName() + "' sport does not match tournament sport");
+            }
+
+            // Check if team is already registered
+            if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
+                throw new RuntimeException("Team '" + team.getName() + "' is already registered for this tournament");
+            }
+
+            // Register team for tournament
+            TournamentTeam tournamentTeam = TournamentTeam.builder()
+                    .id(new TournamentTeamId(tournament.getId(), teamId))
+                    .tournament(tournament)
+                    .team(team)
+                    .registeredAt(LocalDateTime.now())
+                    .build();
+
+            tournamentTeamRepository.save(tournamentTeam);
+        }
     }
 }

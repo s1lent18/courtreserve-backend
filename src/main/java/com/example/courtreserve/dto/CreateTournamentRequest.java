@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,4 +18,5 @@ public class CreateTournamentRequest {
     private Integer prize;
     private String eliminationType; // "SINGLE" or "DOUBLE"
     private Boolean isAutoMode; // true for automatic, false for manual
+    private List<Long> teamIds; // List of team IDs to register for the tournament
 }

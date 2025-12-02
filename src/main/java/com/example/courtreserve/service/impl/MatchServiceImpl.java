@@ -27,6 +27,9 @@ public class MatchServiceImpl implements MatchService {
     private TeamRepository teamRepository;
 
     @Autowired
+    private TournamentTeamRepository tournamentTeamRepository;
+
+    @Autowired
     private ScoreRepository scoreRepository;
 
     @Override
@@ -39,8 +42,8 @@ public class MatchServiceImpl implements MatchService {
             throw new RuntimeException("Tournament must be confirmed before generating bracket");
         }
 
-        // Get all registered teams
-        List<TournamentTeam> tournamentTeams = tournament.getRegisteredTeams();
+        // Get all registered teams from repository
+        List<TournamentTeam> tournamentTeams = tournamentTeamRepository.findByTournament(tournament);
         if (tournamentTeams == null || tournamentTeams.isEmpty()) {
             throw new RuntimeException("No teams registered for tournament");
         }
