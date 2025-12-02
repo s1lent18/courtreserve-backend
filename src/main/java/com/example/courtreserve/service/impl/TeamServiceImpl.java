@@ -100,6 +100,14 @@ public class TeamServiceImpl implements TeamService {
         Tournament tournament = tournamentRepository.findById(request.getTournamentId())
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
 
+        // Check if tournament has already started or is completed/cancelled
+        if ("IN_PROGRESS".equals(tournament.getStatus()) || 
+            "COMPLETED".equals(tournament.getStatus()) || 
+            "CANCELED".equals(tournament.getStatus()) || 
+            "REJECTED".equals(tournament.getStatus())) {
+            throw new RuntimeException("Cannot join tournament. Tournament status is: " + tournament.getStatus());
+        }
+
         // Check if team is already registered for this tournament
         if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
             throw new RuntimeException("Team is already registered for this tournament");

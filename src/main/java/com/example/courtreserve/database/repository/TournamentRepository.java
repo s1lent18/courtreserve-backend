@@ -22,7 +22,10 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
     List<Tournament> findByStatus(String status);
 
+    List<Tournament> findByStatusAndIsAutoMode(String status, Boolean isAutoMode);
+
     @Query("SELECT t FROM Tournament t WHERE t.court.id IN :courtIds AND t.status = 'PENDING'")
     List<Tournament> findPendingTournaments(@Param("courtIds") List<Long> courtIds);
 
-    Page<Tournament> findAllByCourt_Location(String location, Pageable pageable);}
+    Page<Tournament> findAllByCourt_Location(String location, Pageable pageable);
+}
