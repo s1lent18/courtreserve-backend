@@ -11,6 +11,7 @@ import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -157,27 +158,40 @@ public class TournamentServiceImpl implements TournamentService {
         Page<Tournament> tournaments =
                 tournamentRepository.findAllByCourt_Location(location, pageable);
 
-        return tournaments.map(tournament -> {
-            if (!tournament.getStatus().equals("CONFIRMED")) return null;
+        // Filter out non-confirmed tournaments first
+        List<GetTournamentResponse> responses = tournaments.getContent().stream()
+                .filter(t -> "CONFIRMED".equals(t.getStatus()))
+                .map(t -> {
 
-            return new GetTournamentResponse(
-                    tournament.getId(),
-                    tournament.getName(),
-                    tournament.getSport(),
-                    tournament.getOrganizer().getId(),
-                    tournament.getOrganizer().getName(),
-                    tournament.getCourt().getId(),
-                    tournament.getCourt().getName(),
-                    tournament.getStartDate(),
-                    tournament.getEndDate(),
-                    tournament.getStatus(),
-                    tournament.getPrize(),
-                    tournament.getCreated(),
-                    tournament.getRegisteredTeams(),
-                    tournament.getEliminationType(),
-                    tournament.getIsAutoMode()
-            );
-        });
+                    // Map tournament teams
+                    List<GetTournamentTeam> teams = t.getRegisteredTeams().stream()
+                            .map(team -> new GetTournamentTeam(
+                                    team.getTournament().getId(),
+                                    team.getTeam().getName()
+                            ))
+                            .toList();
+
+                    return new GetTournamentResponse(
+                            t.getId(),
+                            t.getName(),
+                            t.getSport(),
+                            t.getOrganizer().getId(),
+                            t.getOrganizer().getName(),
+                            t.getCourt().getId(),
+                            t.getCourt().getName(),
+                            t.getStartDate(),
+                            t.getEndDate(),
+                            t.getStatus(),
+                            t.getPrize(),
+                            t.getCreated(),
+                            teams,
+                            t.getEliminationType(),
+                            t.getIsAutoMode()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(responses, pageable, responses.size());
     }
 
     @Override

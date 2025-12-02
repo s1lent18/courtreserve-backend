@@ -28,7 +28,7 @@ public class GetTournamentResponse {
     Integer prize;
     LocalDateTime created;
     @Schema(type = "array", implementation = Object.class)
-    List<TournamentTeam> teams;
+    List<GetTournamentTeam> teams;
     String eliminationType;
     Boolean isAutoMode;
 }
