@@ -24,10 +24,26 @@ public class JwtFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // List of paths to bypass JWT filter
+        return path.startsWith("/swagger-ui") ||
+                path.equals("/swagger-ui.html") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars/") ||
+                path.equals("/openapi.yaml") ||
+                path.startsWith("/user/login") ||
+                path.startsWith("/user/register") ||
+                path.startsWith("/vendor/login") ||
+                path.startsWith("/vendor/register");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        System.out.println("JwtFilter: Filtering request " + request.getRequestURI());
         String authorizationHeader = request.getHeader("Authorization");
         String jwt = null;
         String username = null;

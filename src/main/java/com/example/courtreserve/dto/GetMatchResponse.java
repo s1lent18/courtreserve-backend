@@ -30,4 +30,3 @@ public class GetMatchResponse {
     private Long winnerTeamId;
     private String winnerTeamName;
 }
-

@@ -1,6 +1,7 @@
 package com.example.courtreserve.database.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -30,5 +31,6 @@ public class Team {
     private LocalDateTime created;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Schema(hidden = true)
     private List<TeamMember> members;
 }

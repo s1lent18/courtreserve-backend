@@ -2,10 +2,7 @@ package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.*;
-import com.example.courtreserve.dto.GetMatchResponse;
-import com.example.courtreserve.dto.GetTournamentBracketResponse;
-import com.example.courtreserve.dto.ScheduleMatchRequest;
-import com.example.courtreserve.dto.UpdateMatchResultRequest;
+import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -98,10 +95,10 @@ public class MatchServiceImpl implements MatchService {
                         .build();
 
                 // If one team is null (bye), set winner immediately
-                if (team2 == null && team1 != null) {
+                if (team2 == null) {
                     match.setWinnerTeam(team1);
                     match.setStatus("COMPLETED");
-                } else if (team1 == null && team2 != null) {
+                } else if (team1 == null) {
                     match.setWinnerTeam(team2);
                     match.setStatus("COMPLETED");
                 }
@@ -141,7 +138,7 @@ public class MatchServiceImpl implements MatchService {
             for (int i = 0; i < previousRoundMatches.size(); i++) {
                 Match prevMatch = previousRoundMatches.get(i);
                 Match nextMatch = currentRoundMatches.get(i / 2);
-                prevMatch.setNextWinnerMatch(nextMatch);
+                prevMatch.setNextWinnerMatch(nextMatch.getId());
                 matchRepository.save(prevMatch);
             }
 
@@ -180,10 +177,10 @@ public class MatchServiceImpl implements MatchService {
                         .build();
 
                 // Handle bye matches
-                if (team2 == null && team1 != null) {
+                if (team2 == null) {
                     match.setWinnerTeam(team1);
                     match.setStatus("COMPLETED");
-                } else if (team1 == null && team2 != null) {
+                } else if (team1 == null) {
                     match.setWinnerTeam(team2);
                     match.setStatus("COMPLETED");
                 }
@@ -224,7 +221,7 @@ public class MatchServiceImpl implements MatchService {
         for (int i = 0; i < winnerBracketRound1.size(); i++) {
             Match wbMatch = winnerBracketRound1.get(i);
             Match lbMatch = loserBracketMatches.get(i / 2);
-            wbMatch.setNextLoserMatch(lbMatch);
+            wbMatch.setNextLoserMatch(lbMatch.getId());
             matchRepository.save(wbMatch);
         }
 
@@ -277,8 +274,8 @@ public class MatchServiceImpl implements MatchService {
                 Match nextMatch = currentRoundMatches.get(i / 2);
                 Match loserMatch = newLoserMatches.get(i / 2);
                 
-                prevMatch.setNextWinnerMatch(nextMatch);
-                prevMatch.setNextLoserMatch(loserMatch);
+                prevMatch.setNextWinnerMatch(nextMatch.getId());
+                prevMatch.setNextLoserMatch(loserMatch.getId());
                 matchRepository.save(prevMatch);
             }
 
@@ -307,7 +304,7 @@ public class MatchServiceImpl implements MatchService {
 
                 for (int i = 0; i < newLoserMatches.size(); i++) {
                     if (i / 2 < loserProgression.size()) {
-                        newLoserMatches.get(i).setNextWinnerMatch(loserProgression.get(i / 2));
+                        newLoserMatches.get(i).setNextWinnerMatch((loserProgression.get(i / 2)).getId());
                         matchRepository.save(newLoserMatches.get(i));
                     }
                 }
@@ -333,21 +330,21 @@ public class MatchServiceImpl implements MatchService {
 
         // Link winner bracket final and loser bracket final to grand final
         if (!previousWinnerMatches.isEmpty()) {
-            Match wbFinal = previousWinnerMatches.get(0);
-            wbFinal.setNextWinnerMatch(grandFinal);
+            Match wbFinal = previousWinnerMatches.getFirst();
+            wbFinal.setNextWinnerMatch(grandFinal.getId());
             matchRepository.save(wbFinal);
         }
 
         if (!previousLoserMatches.isEmpty()) {
-            Match lbFinal = previousLoserMatches.get(previousLoserMatches.size() - 1);
-            lbFinal.setNextWinnerMatch(grandFinal);
+            Match lbFinal = previousLoserMatches.getLast();
+            lbFinal.setNextWinnerMatch(grandFinal.getId());
             matchRepository.save(lbFinal);
         }
     }
 
     @Override
     @Transactional
-    public Match updateMatchResult(UpdateMatchResultRequest request) {
+    public MatchResponse updateMatchResult(UpdateMatchResultRequest request) {
         Match match = matchRepository.findById(request.getMatchId())
                 .orElseThrow(() -> new RuntimeException("Match not found"));
 
@@ -393,7 +390,7 @@ public class MatchServiceImpl implements MatchService {
 
         // Progress winner
         if (match.getNextWinnerMatch() != null) {
-            Match nextMatch = match.getNextWinnerMatch();
+            Match nextMatch = matchRepository.findById(match.getNextWinnerMatch()).orElseThrow(() -> new RuntimeException("Match not Found"));
             if (nextMatch.getTeam1() == null) {
                 nextMatch.setTeam1(winnerTeam);
             } else if (nextMatch.getTeam2() == null) {
@@ -404,7 +401,7 @@ public class MatchServiceImpl implements MatchService {
 
         // Progress loser (double elimination only)
         if (match.getNextLoserMatch() != null && loserTeam != null) {
-            Match nextLoserMatch = match.getNextLoserMatch();
+            Match nextLoserMatch = matchRepository.findById(match.getNextLoserMatch()).orElseThrow(() -> new RuntimeException("Match not Found"));
             if (nextLoserMatch.getTeam1() == null) {
                 nextLoserMatch.setTeam1(loserTeam);
             } else if (nextLoserMatch.getTeam2() == null) {
@@ -416,7 +413,23 @@ public class MatchServiceImpl implements MatchService {
         // Check if tournament is complete
         checkTournamentCompletion(match.getTournament());
 
-        return match;
+        return new MatchResponse(
+                match.getId(),
+                match.getTournament().getId(),
+                match.getTournament().getName(),
+                match.getCourt().getId(),
+                match.getCourt().getName(),
+                match.getTeam1().getId(),
+                match.getTeam1().getName(),
+                match.getTeam2().getId(),
+                match.getTeam2().getName(),
+                match.getStatus(),
+                match.getRound(),
+                match.getBracketType(),
+                match.getMatchPosition(),
+                match.getNextWinnerMatch(),
+                match.getNextLoserMatch()
+        );
     }
 
     private void checkTournamentCompletion(Tournament tournament) {
@@ -465,7 +478,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     @Transactional
-    public Match scheduleMatch(ScheduleMatchRequest request) {
+    public MatchResponse scheduleMatch(ScheduleMatchRequest request) {
         Match match = matchRepository.findById(request.getMatchId())
                 .orElseThrow(() -> new RuntimeException("Match not found"));
 
@@ -477,7 +490,25 @@ public class MatchServiceImpl implements MatchService {
         match.setEndTime(request.getEndTime());
         match.setStatus("SCHEDULED");
 
-        return matchRepository.save(match);
+        Match matchResponse =  matchRepository.save(match);
+
+        return new MatchResponse(
+                matchResponse.getId(),
+                matchResponse.getTournament().getId(),
+                matchResponse.getTournament().getName(),
+                matchResponse.getCourt().getId(),
+                matchResponse.getCourt().getName(),
+                matchResponse.getTeam1().getId(),
+                matchResponse.getTeam1().getName(),
+                matchResponse.getTeam2().getId(),
+                matchResponse.getTeam2().getName(),
+                matchResponse.getStatus(),
+                matchResponse.getRound(),
+                matchResponse.getBracketType(),
+                matchResponse.getMatchPosition(),
+                matchResponse.getNextWinnerMatch(),
+                matchResponse.getNextLoserMatch()
+        );
     }
 
     @Override

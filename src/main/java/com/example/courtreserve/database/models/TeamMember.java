@@ -1,6 +1,7 @@
 package com.example.courtreserve.database.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -20,11 +21,13 @@ public class TeamMember {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("teamId")
     @JoinColumn(name = "team_id")
+    @Schema(hidden = true)
     private Team team;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id")
+    @Schema(hidden = true)
     private User user;
 
     private String role;

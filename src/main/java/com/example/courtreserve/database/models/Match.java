@@ -50,11 +50,7 @@ public class Match {
     @JoinColumn(name = "winner_team_id")
     private Team winnerTeam;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "next_winner_match_id")
-    private Match nextWinnerMatch; // Next match for winner
+    private Long nextWinnerMatch; // Next match for winner
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "next_loser_match_id")
-    private Match nextLoserMatch; // Next match for loser (used in double elimination)
+    private Long nextLoserMatch; // Next match for loser (used in double elimination)
 }
