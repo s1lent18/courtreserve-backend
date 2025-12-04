@@ -1,15 +1,15 @@
 package com.example.courtreserve.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Setter
-@Getter
 @AllArgsConstructor
-public class AddBookingResponse {
+@NoArgsConstructor
+@Data
+public class BookingResponse {
     Long id;
     Long userId;
     String userName;
@@ -17,7 +17,7 @@ public class AddBookingResponse {
     String courtName;
     LocalDateTime startTime;
     LocalDateTime endTime;
-    String status;
+    String status = "PENDING";
     Integer price;
     Integer advance;
     Integer toBePaid;

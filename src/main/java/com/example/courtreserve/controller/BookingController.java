@@ -129,4 +129,40 @@ public class BookingController {
             throw new RuntimeException(e);
         }
     }
+
+    @DeleteMapping("/{userId}/deleteBooking/{bookingId}")
+    @PreAuthorize("hasRole('VENDOR')")
+    public ResponseEntity<?> deleteUserBooking(
+            @PathVariable Long userId,
+            @PathVariable Long bookingId
+    ) {
+        try {
+            bookingService.deleteUserBooking(userId, bookingId);
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An internal error occurred"));
+        }
+    }
+
+    @DeleteMapping("/{vendorId}/deleteBooking/{bookingId}")
+    @PreAuthorize("hasRole('VENDOR')")
+    public ResponseEntity<?> deleteVendorBooking(
+            @PathVariable Long vendorId,
+            @PathVariable Long bookingId
+    ) {
+        try {
+            bookingService.deleteVendorBooking(vendorId, bookingId);
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An internal error occurred"));
+        }
+    }
 }

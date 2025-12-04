@@ -8,6 +8,7 @@ import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddBookingRequest;
 import com.example.courtreserve.dto.AddBookingResponse;
+import com.example.courtreserve.dto.BookingResponse;
 import com.example.courtreserve.dto.GetBookingResponse;
 import com.example.courtreserve.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +87,10 @@ public class BookingServiceImpl implements BookingService {
 
         return new AddBookingResponse(
                 savedBooking.getId(),
-                savedBooking.getUser(),
-                savedBooking.getFacility(),
+                savedBooking.getUser().getId(),
+                savedBooking.getUser().getName(),
+                savedBooking.getFacility().getId(),
+                savedBooking.getFacility().getName(),
                 savedBooking.getStartTime(),
                 savedBooking.getEndTime(),
                 savedBooking.getStatus(),
@@ -98,16 +101,38 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
-    public List<Booking> getPendingBooking(Long vendorId) {
+    public List<BookingResponse> getPendingBooking(Long vendorId) {
         userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
         List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
 
-        return bookingRepository.findPendingBookings(courtIds);
+        List<Booking> bookings = bookingRepository.findPendingBookings(courtIds);
+
+        List<BookingResponse> bookingResponses = new ArrayList<>();
+
+        for (Booking booking : bookings) {
+            BookingResponse temp = new BookingResponse(
+                    booking.getId(),
+                    booking.getUser().getId(),
+                    booking.getUser().getName(),
+                    booking.getFacility().getId(),
+                    booking.getFacility().getName(),
+                    booking.getStartTime(),
+                    booking.getEndTime(),
+                    booking.getStatus(),
+                    booking.getPrice(),
+                    booking.getAdvance(),
+                    booking.getToBePaid(),
+                    booking.getCreated()
+            );
+            bookingResponses.add(temp);
+        }
+
+        return bookingResponses;
     }
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
-    public Booking confirmBooking(Long bookingId) {
+    public BookingResponse confirmBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
         LocalDateTime now = LocalDateTime.now();
@@ -118,31 +143,102 @@ public class BookingServiceImpl implements BookingService {
             pendingBooking.setStatus("EXPIRED");
         }
 
-        bookingRepository.save(pendingBooking);
+        Booking response = bookingRepository.save(pendingBooking);
 
-        return pendingBooking;
+        return new BookingResponse(
+                response.getId(),
+                response.getUser().getId(),
+                response.getUser().getName(),
+                response.getFacility().getId(),
+                response.getFacility().getName(),
+                response.getStartTime(),
+                response.getEndTime(),
+                response.getStatus(),
+                response.getPrice(),
+                response.getAdvance(),
+                response.getToBePaid(),
+                response.getCreated()
+        );
     }
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
-    public Booking rejectBooking(Long bookingId) {
+    public BookingResponse rejectBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
         pendingBooking.setStatus("REJECTED");
 
-        bookingRepository.save(pendingBooking);
+        Booking response = bookingRepository.save(pendingBooking);
 
-        return pendingBooking;
+        return new BookingResponse(
+                response.getId(),
+                response.getUser().getId(),
+                response.getUser().getName(),
+                response.getFacility().getId(),
+                response.getFacility().getName(),
+                response.getStartTime(),
+                response.getEndTime(),
+                response.getStatus(),
+                response.getPrice(),
+                response.getAdvance(),
+                response.getToBePaid(),
+                response.getCreated()
+        );
     }
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
-    public Booking cancelBooking(Long bookingId) {
+    public BookingResponse cancelBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
 
         pendingBooking.setStatus("CANCELED");
 
-        bookingRepository.save(pendingBooking);
+        Booking response = bookingRepository.save(pendingBooking);
 
-        return pendingBooking;
+        return new BookingResponse(
+                response.getId(),
+                response.getUser().getId(),
+                response.getUser().getName(),
+                response.getFacility().getId(),
+                response.getFacility().getName(),
+                response.getStartTime(),
+                response.getEndTime(),
+                response.getStatus(),
+                response.getPrice(),
+                response.getAdvance(),
+                response.getToBePaid(),
+                response.getCreated()
+        );
+    }
+
+    @Override
+    public void deleteUserBooking(Long Id, Long bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+
+        userRepository.findById(Id).orElseThrow(() -> new RuntimeException("User Not Found"));
+
+        if (!Id.equals(booking.getUser().getId())) {
+            throw new RuntimeException("Booking doesn't belong to user");
+        }
+
+        booking.setDeletedByUser(true);
+        booking.setDeletedAtUser(LocalDateTime.now());
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    public void deleteVendorBooking(Long Id, Long bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+
+        userRepository.findById(Id).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+
+        if (!Id.equals(booking.getFacility().getVendor().getId())) {
+            throw new RuntimeException("Booking doesn't belong to vendor");
+        }
+
+        booking.setDeletedByVendor(true);
+        booking.setDeletedAtVendor(LocalDateTime.now());
+        bookingRepository.save(booking);
     }
 
     @CacheEvict(value = "bookings", allEntries = true)

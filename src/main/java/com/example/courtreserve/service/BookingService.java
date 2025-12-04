@@ -1,8 +1,8 @@
 package com.example.courtreserve.service;
 
-import com.example.courtreserve.database.models.Booking;
 import com.example.courtreserve.dto.AddBookingRequest;
 import com.example.courtreserve.dto.AddBookingResponse;
+import com.example.courtreserve.dto.BookingResponse;
 import com.example.courtreserve.dto.GetBookingResponse;
 import org.springframework.scheduling.annotation.Scheduled;
 import java.util.List;
@@ -13,13 +13,17 @@ public interface BookingService {
 
     AddBookingResponse createBooking(AddBookingRequest request);
 
-    List<Booking> getPendingBooking(Long vendorId);
+    List<BookingResponse> getPendingBooking(Long vendorId);
 
-    Booking confirmBooking(Long bookingId);
+    BookingResponse confirmBooking(Long bookingId);
 
-    Booking rejectBooking(Long bookingId);
+    BookingResponse rejectBooking(Long bookingId);
 
-    Booking cancelBooking(Long bookingId);
+    BookingResponse cancelBooking(Long bookingId);
+
+    void deleteUserBooking(Long Id, Long bookingId);
+
+    void deleteVendorBooking(Long Id, Long bookingId);
 
     @Scheduled(cron = "0 0 0 * * *")
     void checkExpiredBookings();

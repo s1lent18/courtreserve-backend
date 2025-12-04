@@ -43,6 +43,7 @@ public class Booking {
     private LocalDateTime endTime;
 
     @Column(length = 20)
+    @Builder.Default
     private String status = "PENDING";
 
     @Column(nullable = false)
@@ -56,4 +57,18 @@ public class Booking {
 
     @Column(columnDefinition = "timestamp default current_timestamp")
     private LocalDateTime created;
+
+    @Column(name = "deleted_by_user")
+    @Builder.Default
+    private Boolean deletedByUser = false;
+
+    @Column(name = "deleted_by_vendor")
+    @Builder.Default
+    private Boolean deletedByVendor = false;
+
+    @Column(name = "time_of_user_deletion")
+    private LocalDateTime deletedAtUser;
+
+    @Column(name = "time_of_vendor_deletion")
+    private LocalDateTime deletedAtVendor;
 }
