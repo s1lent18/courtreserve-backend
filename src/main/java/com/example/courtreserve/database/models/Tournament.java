@@ -44,6 +44,8 @@ public class Tournament {
 
     private LocalDateTime created;
 
+    private String entrance;
+
     @Column(name = "elimination_type")
     private String eliminationType; // "SINGLE" or "DOUBLE"
 

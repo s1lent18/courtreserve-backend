@@ -1,5 +1,6 @@
 package com.example.courtreserve.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,5 +19,7 @@ public class CreateTournamentRequest {
     private Integer prize;
     private String eliminationType; // "SINGLE" or "DOUBLE"
     private Boolean isAutoMode; // true for automatic, false for manual
+    @Schema(type = "array", implementation = Long.class)
     private List<Long> teamIds; // List of team IDs to register for the tournament
+    private String entrance;
 }

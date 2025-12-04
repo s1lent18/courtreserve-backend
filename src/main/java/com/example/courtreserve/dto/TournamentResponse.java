@@ -1,29 +1,29 @@
 package com.example.courtreserve.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
 
-@Getter @Setter
+@Data
 @AllArgsConstructor
-public class GetSingleTournamentResponse {
+@NoArgsConstructor
+public class TournamentResponse {
     Long id;
     String name;
     String sport;
-    Long userId;
-    String userName;
+    Long organizerId;
+    String organizerName;
     Long courtId;
     String courtName;
     LocalDate startDate;
     LocalDate endDate;
     String status;
     Integer prize;
-    @Schema(type = "array", implementation = Object.class)
-    List<GetTournamentTeam> tournamentTeams;
+    LocalDateTime created;
     String eliminationType;
     Boolean isAutoMode;
     String entrance;

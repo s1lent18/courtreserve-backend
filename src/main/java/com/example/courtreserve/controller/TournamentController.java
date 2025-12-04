@@ -1,9 +1,13 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.dto.CreateTournamentRequest;
+import com.example.courtreserve.dto.GetTournamentResponse;
+import com.example.courtreserve.dto.PaginatedResponse;
 import com.example.courtreserve.service.TournamentService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,31 +66,23 @@ public class TournamentController {
         }
     }
 
-    @PreAuthorize("hasRole('USER')")
     @GetMapping("/getAllTournaments")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getAllTournaments(
             @RequestParam String location,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @Parameter(hidden = true) Pageable pageable
     ) {
-        try {
-            var tournaments = tournamentService.getAllTournaments(location, page, size);
+        PaginatedResponse<GetTournamentResponse> tournaments =
+                tournamentService.getAllTournaments(location, pageable);
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of(
-                        "message", "All Tournaments Obtained",
-                        "page", tournaments.getNumber(),
-                        "size", tournaments.getSize(),
-                        "totalPages", tournaments.getTotalPages(),
-                        "totalElements", tournaments.getTotalElements(),
-                        "content", tournaments.getContent()
-                    ));
-
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(Map.of(
+                "message", "All Tournaments Obtained",
+                "page", tournaments.getPage(),
+                "size", tournaments.getSize(),
+                "totalPages", tournaments.getTotalPages(),
+                "totalElements", tournaments.getTotalElements(),
+                "content", tournaments.getContent()
+        ));
     }
 
     @GetMapping("/getSingleTournament")

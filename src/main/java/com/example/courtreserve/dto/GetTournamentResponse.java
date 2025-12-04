@@ -1,6 +1,5 @@
 package com.example.courtreserve.dto;
 
-import com.example.courtreserve.database.models.TournamentTeam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,4 +30,5 @@ public class GetTournamentResponse {
     List<GetTournamentTeam> teams;
     String eliminationType;
     Boolean isAutoMode;
+    String entrance;
 }

@@ -11,8 +11,6 @@ import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -74,6 +73,7 @@ public class TournamentServiceImpl implements TournamentService {
                 .created(LocalDateTime.now())
                 .eliminationType(request.getEliminationType())
                 .isAutoMode(request.getIsAutoMode() != null ? request.getIsAutoMode() : false)
+                .entrance(request.getEntrance())
                 .build();
 
         Tournament savedTournament = tournamentRepository.save(tournament);
@@ -97,21 +97,42 @@ public class TournamentServiceImpl implements TournamentService {
                 savedTournament.getPrize(),
                 savedTournament.getCreated(),
                 savedTournament.getEliminationType(),
-                savedTournament.getIsAutoMode()
+                savedTournament.getIsAutoMode(),
+                savedTournament.getEntrance()
         );
     }
 
     @Override
-    public List<Tournament> getPendingTournaments(Long vendorId) {
+    public List<TournamentResponse> getPendingTournaments(Long vendorId) {
         userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
         List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
 
-        return tournamentRepository.findPendingTournaments(courtIds);
+        List<Tournament> tournaments = tournamentRepository.findPendingTournaments(courtIds);
+
+        return tournaments.stream()
+                .map(tournament -> new TournamentResponse(
+                        tournament.getId(),
+                        tournament.getName(),
+                        tournament.getSport(),
+                        tournament.getOrganizer().getId(),
+                        tournament.getOrganizer().getName(),
+                        tournament.getCourt().getId(),
+                        tournament.getCourt().getName(),
+                        tournament.getStartDate(),
+                        tournament.getEndDate(),
+                        tournament.getStatus(),
+                        tournament.getPrize(),
+                        tournament.getCreated(),
+                        tournament.getEliminationType(),
+                        tournament.getIsAutoMode(),
+                        tournament.getEntrance()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Tournament confirmTournament(Long tournamentId) {
+    public TournamentResponse confirmTournament(Long tournamentId) {
         Tournament pendingTournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
@@ -123,48 +144,93 @@ public class TournamentServiceImpl implements TournamentService {
             pendingTournament.setStatus("EXPIRED");
         }
 
-        tournamentRepository.save(pendingTournament);
+        Tournament response = tournamentRepository.save(pendingTournament);
 
-        return pendingTournament;
+        return new TournamentResponse(
+                response.getId(),
+                response.getName(),
+                response.getSport(),
+                response.getOrganizer().getId(),
+                response.getOrganizer().getName(),
+                response.getCourt().getId(),
+                response.getCourt().getName(),
+                response.getStartDate(),
+                response.getEndDate(),
+                response.getStatus(),
+                response.getPrize(),
+                response.getCreated(),
+                response.getEliminationType(),
+                response.getIsAutoMode(),
+                response.getEntrance()
+        );
     }
 
     @Override
-    public Tournament rejectTournament(Long TournamentId) {
+    public TournamentResponse rejectTournament(Long TournamentId) {
         Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
         pendingTournament.setStatus("REJECTED");
 
-        tournamentRepository.save(pendingTournament);
+        Tournament response = tournamentRepository.save(pendingTournament);
 
-        return pendingTournament;
+        return new TournamentResponse(
+                response.getId(),
+                response.getName(),
+                response.getSport(),
+                response.getOrganizer().getId(),
+                response.getOrganizer().getName(),
+                response.getCourt().getId(),
+                response.getCourt().getName(),
+                response.getStartDate(),
+                response.getEndDate(),
+                response.getStatus(),
+                response.getPrize(),
+                response.getCreated(),
+                response.getEliminationType(),
+                response.getIsAutoMode(),
+                response.getEntrance()
+        );
     }
 
     @Override
-    public Tournament cancelTournament(Long TournamentId) {
+    public TournamentResponse cancelTournament(Long TournamentId) {
         Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
 
         pendingTournament.setStatus("CANCELED");
 
-        tournamentRepository.save(pendingTournament);
+        Tournament response = tournamentRepository.save(pendingTournament);
 
-        return pendingTournament;
+        return new TournamentResponse(
+                response.getId(),
+                response.getName(),
+                response.getSport(),
+                response.getOrganizer().getId(),
+                response.getOrganizer().getName(),
+                response.getCourt().getId(),
+                response.getCourt().getName(),
+                response.getStartDate(),
+                response.getEndDate(),
+                response.getStatus(),
+                response.getPrize(),
+                response.getCreated(),
+                response.getEliminationType(),
+                response.getIsAutoMode(),
+                response.getEntrance()
+        );
     }
 
     @Override
-    public Page<GetTournamentResponse> getAllTournaments(String location, int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
+    public PaginatedResponse<GetTournamentResponse> getAllTournaments(String location, Pageable pageable) {
 
         Page<Tournament> tournaments =
                 tournamentRepository.findAllByCourt_Location(location, pageable);
 
-        // Filter out non-confirmed tournaments first
-        List<GetTournamentResponse> responses = tournaments.getContent().stream()
+        List<GetTournamentResponse> responses = tournaments.getContent()
+                .stream()
                 .filter(t -> "CONFIRMED".equals(t.getStatus()))
                 .map(t -> {
-
-                    // Map tournament teams
-                    List<GetTournamentTeam> teams = t.getRegisteredTeams().stream()
+                    List<GetTournamentTeam> teams = t.getRegisteredTeams()
+                            .stream()
                             .map(team -> new GetTournamentTeam(
                                     team.getTournament().getId(),
                                     team.getTeam().getName()
@@ -186,12 +252,19 @@ public class TournamentServiceImpl implements TournamentService {
                             t.getCreated(),
                             teams,
                             t.getEliminationType(),
-                            t.getIsAutoMode()
+                            t.getIsAutoMode(),
+                            t.getEntrance()
                     );
                 })
                 .toList();
 
-        return new PageImpl<>(responses, pageable, responses.size());
+        return new PaginatedResponse<>(
+                tournaments.getNumber(),
+                tournaments.getSize(),
+                tournaments.getTotalPages(),
+                tournaments.getTotalElements(),
+                responses
+        );
     }
 
     @Override
@@ -225,12 +298,13 @@ public class TournamentServiceImpl implements TournamentService {
                 tournament.getPrize(),
                 teams,
                 tournament.getEliminationType(),
-                tournament.getIsAutoMode()
+                tournament.getIsAutoMode(),
+                tournament.getEntrance()
         );
     }
 
     @Override
-    public Tournament startTournament(Long tournamentId) {
+    public TournamentResponse startTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
 
@@ -241,8 +315,23 @@ public class TournamentServiceImpl implements TournamentService {
         // Generate bracket
         matchService.generateBracket(tournamentId);
 
-        // Tournament status is updated to IN_PROGRESS by generateBracket
-        return tournamentRepository.findById(tournamentId).orElseThrow();
+        return new TournamentResponse(
+                tournament.getId(),
+                tournament.getName(),
+                tournament.getSport(),
+                tournament.getOrganizer().getId(),
+                tournament.getOrganizer().getName(),
+                tournament.getCourt().getId(),
+                tournament.getCourt().getName(),
+                tournament.getStartDate(),
+                tournament.getEndDate(),
+                tournament.getStatus(),
+                tournament.getPrize(),
+                tournament.getCreated(),
+                tournament.getEliminationType(),
+                tournament.getIsAutoMode(),
+                tournament.getEntrance()
+        );
     }
 
     /**
