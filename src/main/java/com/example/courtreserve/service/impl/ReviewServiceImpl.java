@@ -41,8 +41,10 @@ public class ReviewServiceImpl implements ReviewService {
 
         return new AddReviewResponse(
                 savedReview.getId(),
-                savedReview.getUser(),
-                savedReview.getFacility(),
+                savedReview.getUser().getId(),
+                savedReview.getUser().getName(),
+                savedReview.getFacility().getId(),
+                savedReview.getFacility().getName(),
                 savedReview.getRating(),
                 savedReview.getReview(),
                 savedReview.getCreated()
