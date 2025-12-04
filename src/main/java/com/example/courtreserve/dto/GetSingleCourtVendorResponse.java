@@ -24,5 +24,5 @@ public class GetSingleCourtVendorResponse {
     Integer price;
     String type;
     @Schema(type = "array", implementation = Object.class)
-    List<Booking> bookings;
+    List<BookingResponse> bookings;
 }

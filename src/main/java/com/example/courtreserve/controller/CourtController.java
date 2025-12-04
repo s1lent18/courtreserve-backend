@@ -3,18 +3,17 @@ package com.example.courtreserve.controller;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.dto.AddCourtRequest;
 import com.example.courtreserve.dto.GetPopularCourts;
+import com.example.courtreserve.dto.PaginatedResponse;
 import com.example.courtreserve.service.CourtService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -24,31 +23,26 @@ public class CourtController {
     @Autowired
     private final CourtService courtService;
 
-    @Autowired
-    private final CourtRepository courtRepository;
-
-    public CourtController(CourtService courtService, CourtRepository courtRepository) {
+    public CourtController(CourtService courtService) {
         this.courtService = courtService;
-        this.courtRepository = courtRepository;
     }
 
     @GetMapping("/getPopularCourts")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, Object>> getPopularCourts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam String location
+    public ResponseEntity<?> getPopularCourts(
+            @RequestParam String location,
+            @Parameter(hidden = true) Pageable pageable
     ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<GetPopularCourts> courtsPage = courtRepository.findCourtStatsByCount(location, pageable);
+        PaginatedResponse<GetPopularCourts> courts = courtService.getPopularCourts(location, pageable);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("courts", courtsPage.getContent());
-        response.put("currentPage", courtsPage.getNumber());
-        response.put("totalItems", courtsPage.getTotalElements());
-        response.put("totalPages", courtsPage.getTotalPages());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "message", "Popular Courts Retrieved",
+                "page", courts.getPage(),
+                "size", courts.getSize(),
+                "totalPages", courts.getTotalPages(),
+                "totalElements", courts.getTotalElements(),
+                "content", courts.getContent()
+        ));
     }
 
     @GetMapping("/getCourt")
