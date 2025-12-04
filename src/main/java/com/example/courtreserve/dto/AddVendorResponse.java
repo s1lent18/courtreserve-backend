@@ -14,4 +14,6 @@ public class AddVendorResponse {
     String name;
     String email;
     LocalDateTime createdAt;
+    String location;
+    String coverImage;
 }

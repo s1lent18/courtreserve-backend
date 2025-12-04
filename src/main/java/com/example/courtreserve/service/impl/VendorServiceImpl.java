@@ -9,6 +9,7 @@ import com.example.courtreserve.dto.AddVendorResponse;
 import com.example.courtreserve.dto.LoginVendorResponse;
 import com.example.courtreserve.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,9 @@ import java.time.LocalDateTime;
 
 @Service
 public class VendorServiceImpl implements VendorService {
+
+    @Value("${defaultImage.url}")
+    String coverImage;
 
     @Autowired
     private UserRepository userRepository;
@@ -33,7 +37,9 @@ public class VendorServiceImpl implements VendorService {
                 vendor.getId(),
                 vendor.getName(),
                 vendor.getEmail(),
-                vendor.getCreated()
+                vendor.getCreated(),
+                vendor.getLocation(),
+                vendor.getCoverImage()
         );
     }
 
@@ -50,7 +56,9 @@ public class VendorServiceImpl implements VendorService {
                 .name(addVendorRequest.getName())
                 .email(addVendorRequest.getEmail())
                 .password(passwordEncoder.encode(addVendorRequest.getPassword()))
+                .location(addVendorRequest.getLocation())
                 .created(LocalDateTime.now())
+                .coverImage(coverImage)
                 .build();
 
         newVendor.getRoles().add(vendorRole);
@@ -61,7 +69,9 @@ public class VendorServiceImpl implements VendorService {
                 savedVendor.getId(),
                 savedVendor.getName(),
                 savedVendor.getEmail(),
-                savedVendor.getCreated()
+                savedVendor.getCreated(),
+                savedVendor.getLocation(),
+                savedVendor.getCoverImage()
         );
     }
 }

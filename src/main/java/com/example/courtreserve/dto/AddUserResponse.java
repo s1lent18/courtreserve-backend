@@ -14,5 +14,6 @@ public class AddUserResponse {
     String name;
     String email;
     String location;
+    String coverImage;
     LocalDateTime createdAt;
 }

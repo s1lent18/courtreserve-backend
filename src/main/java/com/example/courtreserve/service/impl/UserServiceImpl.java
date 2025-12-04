@@ -9,6 +9,7 @@ import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
 import com.example.courtreserve.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,9 @@ import java.time.LocalDateTime;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Value("${defaultImage.url}")
+    String coverImage;
 
     @Autowired
     private UserRepository userRepository;
@@ -34,7 +38,8 @@ public class UserServiceImpl implements UserService {
                 user.getName(),
                 user.getEmail(),
                 user.getCreated(),
-                user.getLocation()
+                user.getLocation(),
+                user.getCoverImage()
         );
     }
 
@@ -53,6 +58,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(addUserRequest.getPassword()))
                 .location(addUserRequest.getLocation())
                 .created(LocalDateTime.now())
+                .coverImage(coverImage)
                 .build();
 
         newUser.getRoles().add(userRole);
@@ -64,6 +70,7 @@ public class UserServiceImpl implements UserService {
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.getLocation(),
+                savedUser.getCoverImage(),
                 savedUser.getCreated()
         );
     }

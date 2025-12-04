@@ -10,5 +10,6 @@ import lombok.Setter;
 public class AddVendorRequest {
     String name;
     String email;
+    String location;
     String password;
 }

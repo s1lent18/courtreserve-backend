@@ -16,12 +16,14 @@ public class LoginUserResponse {
     String location;
     LocalDateTime createdAt;
     String token;
+    String coverImage;
 
-    public LoginUserResponse(Long id, String name, String email, LocalDateTime createdAt, String location) {
+    public LoginUserResponse(Long id, String name, String email, LocalDateTime createdAt, String location, String coverImage) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.location = location;
         this.createdAt = createdAt;
+        this.coverImage = coverImage;
     }
 }

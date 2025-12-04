@@ -35,6 +35,9 @@ public class User {
     @Column(columnDefinition = "timestamp default current_timestamp")
     private LocalDateTime created;
 
+    @Column(name = "profile_image")
+    private String coverImage;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
