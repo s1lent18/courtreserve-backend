@@ -3,10 +3,13 @@ package com.example.courtreserve.service.impl;
 import com.example.courtreserve.database.models.Role;
 import com.example.courtreserve.database.models.User;
 import com.example.courtreserve.database.repository.RoleRepository;
+import com.example.courtreserve.database.repository.TeamMemberRepository;
+import com.example.courtreserve.database.repository.TeamRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
+import com.example.courtreserve.dto.TeamAssociation;
 import com.example.courtreserve.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -26,6 +30,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private TeamRepository teamRepository;
+
+    @Autowired
+    private TeamMemberRepository teamMemberRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -72,6 +82,20 @@ public class UserServiceImpl implements UserService {
                 savedUser.getLocation(),
                 savedUser.getCoverImage(),
                 savedUser.getCreated()
+        );
+    }
+
+    @Override
+    public TeamAssociation findTeamAssociation(Long Id) {
+        User user = userRepository.findById(Id).orElseThrow(() -> new RuntimeException("User Not Found"));
+
+        Optional<Long> captainTeamId = teamRepository.findCaptainTeamId(user.getId());
+
+        Optional<Long> memberTeamId = teamMemberRepository.findMemberTeamIds(user.getId());
+
+        return new TeamAssociation(
+                captainTeamId.orElse(null),
+                memberTeamId.orElse(null)
         );
     }
 }

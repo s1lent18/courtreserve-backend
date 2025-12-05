@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AddTeamMemberRequest {
     private Long teamId;
-    private Long userId;
+    private String userEmail;
     private String role; // "MEMBER", "CO_CAPTAIN", etc. (default: "MEMBER")
 }
 

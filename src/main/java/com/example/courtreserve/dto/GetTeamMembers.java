@@ -12,4 +12,5 @@ public class GetTeamMembers {
     Long id;
     String name;
     String role;
+    String coverImage;
 }

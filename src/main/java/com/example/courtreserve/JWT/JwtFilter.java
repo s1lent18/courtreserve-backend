@@ -53,6 +53,9 @@ public class JwtFilter extends OncePerRequestFilter {
             username = jwtUtil.extractUsername(jwt);
         }
 
+        String path = request.getRequestURI();
+        System.out.println("Request Path: " + path);
+
         System.out.println("JwtFilter: Username from token = " + username);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -1,20 +1,10 @@
 package com.example.courtreserve.controller;
 
 import com.example.courtreserve.JWT.JwtUtil;
-import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.dto.*;
-import com.example.courtreserve.service.BookingService;
-import com.example.courtreserve.service.CourtService;
-import com.example.courtreserve.service.MatchService;
-import com.example.courtreserve.service.ReviewService;
-import com.example.courtreserve.service.TeamService;
-import com.example.courtreserve.service.TournamentService;
 import com.example.courtreserve.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -84,6 +74,23 @@ public class UserController {
             response.put("userData", req);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/association")
+    public ResponseEntity<?> teamAssociation(
+            @RequestParam Long Id
+    ) {
+        try {
+            var teamAssociation = userService.findTeamAssociation(Id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "Team Association", "teamAssociation", teamAssociation));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }

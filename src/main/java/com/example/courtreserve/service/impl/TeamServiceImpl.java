@@ -147,7 +147,8 @@ public class TeamServiceImpl implements TeamService {
                     teamMember.getId(),
                     teamMember.getUser().getId(),
                     teamMember.getUser().getName(),
-                    teamMember.getRole()
+                    teamMember.getRole(),
+                    teamMember.getUser().getCoverImage()
             );
             members.add(member);
         }
@@ -169,7 +170,7 @@ public class TeamServiceImpl implements TeamService {
                 .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Find the user
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findByEmail(request.getUserEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Check if user is already a member of this team
@@ -189,7 +190,7 @@ public class TeamServiceImpl implements TeamService {
 
         // Create team member
         TeamMember teamMember = TeamMember.builder()
-                .id(new TeamMemberId(request.getTeamId(), request.getUserId()))
+                .id(new TeamMemberId(request.getTeamId(), user.getId()))
                 .team(team)
                 .user(user)
                 .role(role)

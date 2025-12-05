@@ -7,6 +7,7 @@ import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
+import com.example.courtreserve.dto.TeamAssociation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,4 +22,6 @@ public interface UserService {
     LoginUserResponse getUser(String email);
 
     AddUserResponse addNewUser(AddUserRequest addUserRequest);
+
+    TeamAssociation findTeamAssociation(Long Id);
 }
