@@ -5,7 +5,6 @@ import com.example.courtreserve.dto.GetTournamentResponse;
 import com.example.courtreserve.dto.PaginatedResponse;
 import com.example.courtreserve.service.TournamentService;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,44 +25,25 @@ public class TournamentController {
         this.tournamentService = tournamentService;
     }
 
-    // Not Implemented Yet
-
     @PostMapping("/createTournament")
     @PreAuthorize("hasAnyRole('VENDOR', 'USER')")
     public ResponseEntity<?> createTournament(
             @RequestBody CreateTournamentRequest request,
             @RequestParam Long organizerId
     ) {
-        try {
-            var tournament = tournamentService.createTournament(organizerId, request);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "Tournament created successfully", "tournament", tournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var tournament = tournamentService.createTournament(organizerId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Tournament created successfully", "tournament", tournament));
     }
 
-    // Not Implemented Yet
     @PreAuthorize("hasAnyRole('VENDOR', 'USER')")
     @PostMapping("/{tournamentId}/cancelTournament")
     public ResponseEntity<?> cancelTournament(
             @PathVariable Long tournamentId
     ) {
-        try {
-            var canceledTournament = tournamentService.rejectTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Canceled", "canceledTournament", canceledTournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var canceledTournament = tournamentService.rejectTournament(tournamentId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Tournament Canceled", "canceledTournament", canceledTournament));
     }
 
     @GetMapping("/getAllTournaments")
@@ -90,15 +70,9 @@ public class TournamentController {
     public ResponseEntity<?> getSingleTournament(
             @RequestParam Long Id
     ) {
-        try {
-            var tournament = tournamentService.getSingleTournament(Id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Single Tournament Returned", "singleTournament", tournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        var tournament = tournamentService.getSingleTournament(Id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Single Tournament Returned", "singleTournament", tournament));
     }
 
     @PostMapping("/{tournamentId}/startTournament")
@@ -106,15 +80,9 @@ public class TournamentController {
     public ResponseEntity<?> startTournament(
             @PathVariable Long tournamentId
     ) {
-        try {
-            var tournament = tournamentService.startTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament started and bracket generated", "tournament", tournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        var tournament = tournamentService.startTournament(tournamentId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Tournament started and bracket generated", "tournament", tournament));
     }
 
     @GetMapping("/getPendingTournaments")
@@ -122,17 +90,9 @@ public class TournamentController {
     public ResponseEntity<?> getPendingTournaments(
             @RequestParam Long id
     ) {
-        try {
-            var pendingTournaments = tournamentService.getPendingTournaments(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Pending Tournaments returned", "pendingTournaments", pendingTournaments));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var pendingTournaments = tournamentService.getPendingTournaments(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Pending Tournaments returned", "pendingTournaments", pendingTournaments));
     }
 
     @PostMapping("/{tournamentId}/confirmTournament")
@@ -140,17 +100,9 @@ public class TournamentController {
     public ResponseEntity<?> confirmTournament(
             @PathVariable Long tournamentId
     ) {
-        try {
-            var confirmedTournament = tournamentService.confirmTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Confirmed", "confirmedTournament", confirmedTournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var confirmedTournament = tournamentService.confirmTournament(tournamentId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Tournament Confirmed", "confirmedTournament", confirmedTournament));
     }
 
     @PostMapping("/{tournamentId}/rejectTournament")
@@ -158,16 +110,8 @@ public class TournamentController {
     public ResponseEntity<?> rejectTournament(
             @PathVariable Long tournamentId
     ) {
-        try {
-            var rejectedTournament = tournamentService.rejectTournament(tournamentId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Tournament Rejected", "rejectedTournament", rejectedTournament));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var rejectedTournament = tournamentService.rejectTournament(tournamentId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Tournament Rejected", "rejectedTournament", rejectedTournament));
     }
 }

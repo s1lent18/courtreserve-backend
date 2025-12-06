@@ -7,6 +7,9 @@ import com.example.courtreserve.database.repository.TournamentRepository;
 import com.example.courtreserve.database.repository.TournamentTeamRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.*;
+import com.example.courtreserve.exception.BadRequestException;
+import com.example.courtreserve.exception.ConflictException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.MatchService;
 import com.example.courtreserve.service.TournamentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +50,17 @@ public class TournamentServiceImpl implements TournamentService {
     public CreateTournamentResponse createTournament(Long organizerId, CreateTournamentRequest request) {
         // Find the organizer
         User organizer = userRepository.findById(organizerId)
-                .orElseThrow(() -> new RuntimeException("Organizer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Organizer", "id", organizerId));
 
         // Find the court
         Court court = courtRepository.findById(request.getCourtId())
-                .orElseThrow(() -> new RuntimeException("Court not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", request.getCourtId()));
 
         // Validate elimination type
         if (request.getEliminationType() != null && 
             !request.getEliminationType().equals("SINGLE") && 
             !request.getEliminationType().equals("DOUBLE")) {
-            throw new RuntimeException("Invalid elimination type. Must be 'SINGLE' or 'DOUBLE'");
+            throw new BadRequestException("Invalid elimination type. Must be 'SINGLE' or 'DOUBLE'");
         }
 
         // Create tournament with PENDING APPROVAL status
@@ -104,7 +107,8 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public List<TournamentResponse> getPendingTournaments(Long vendorId) {
-        userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        userRepository.findById(vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", vendorId));
 
         List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
 
@@ -134,7 +138,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public TournamentResponse confirmTournament(Long tournamentId) {
         Tournament pendingTournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", tournamentId));
 
         LocalDate now = LocalDate.now();
 
@@ -167,7 +171,8 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public TournamentResponse rejectTournament(Long TournamentId) {
-        Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+        Tournament pendingTournament = tournamentRepository.findById(TournamentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", TournamentId));
 
         pendingTournament.setStatus("REJECTED");
 
@@ -194,7 +199,8 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public TournamentResponse cancelTournament(Long TournamentId) {
-        Tournament pendingTournament = tournamentRepository.findById(TournamentId).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+        Tournament pendingTournament = tournamentRepository.findById(TournamentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", TournamentId));
 
         pendingTournament.setStatus("CANCELED");
 
@@ -270,7 +276,8 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public GetSingleTournamentResponse getSingleTournament(Long Id) {
 
-        Tournament tournament = tournamentRepository.findById(Id).orElseThrow(() -> new RuntimeException("Tournament Not Found"));
+        Tournament tournament = tournamentRepository.findById(Id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", Id));
 
         List<GetTournamentTeam> teams = new ArrayList<>();
 
@@ -306,10 +313,10 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public TournamentResponse startTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", tournamentId));
 
         if (!"CONFIRMED".equals(tournament.getStatus())) {
-            throw new RuntimeException("Tournament must be confirmed before starting");
+            throw new BadRequestException("Tournament must be confirmed before starting");
         }
 
         // Generate bracket
@@ -340,16 +347,16 @@ public class TournamentServiceImpl implements TournamentService {
     private void registerTeamsForTournament(Tournament tournament, List<Long> teamIds) {
         for (Long teamId : teamIds) {
             Team team = teamRepository.findById(teamId)
-                    .orElseThrow(() -> new RuntimeException("Team with ID " + teamId + " not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Team", "id", teamId));
 
             // Check if team sport matches tournament sport
             if (!team.getSport().equalsIgnoreCase(tournament.getSport())) {
-                throw new RuntimeException("Team '" + team.getName() + "' sport does not match tournament sport");
+                throw new BadRequestException("Team '" + team.getName() + "' sport does not match tournament sport");
             }
 
             // Check if team is already registered
             if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
-                throw new RuntimeException("Team '" + team.getName() + "' is already registered for this tournament");
+                throw new ConflictException("Team '" + team.getName() + "' is already registered for this tournament");
             }
 
             // Register team for tournament

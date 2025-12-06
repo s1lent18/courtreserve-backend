@@ -7,6 +7,8 @@ import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddVendorRequest;
 import com.example.courtreserve.dto.AddVendorResponse;
 import com.example.courtreserve.dto.LoginVendorResponse;
+import com.example.courtreserve.exception.ConflictException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +33,8 @@ public class VendorServiceImpl implements VendorService {
     private PasswordEncoder passwordEncoder;
 
     public LoginVendorResponse getVendor(String email) {
-        User vendor = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        User vendor = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "email", email));
 
         return new LoginVendorResponse(
                 vendor.getId(),
@@ -46,11 +49,11 @@ public class VendorServiceImpl implements VendorService {
     public AddVendorResponse addNewVendor(AddVendorRequest addVendorRequest) {
         boolean exists = userRepository.existsByEmail(addVendorRequest.getEmail());
         if (exists) {
-            throw new RuntimeException("Vendor with email " + addVendorRequest.getEmail() + " already exists!");
+            throw new ConflictException("Vendor", "email", addVendorRequest.getEmail());
         }
 
         Role vendorRole = roleRepository.findByName("VENDOR")
-                .orElseThrow(() -> new RuntimeException("Default role VENDOR not found. Please seed roles table."));
+                .orElseThrow(() -> new ResourceNotFoundException("Default role VENDOR not found. Please seed roles table."));
 
         User newVendor = User.builder()
                 .name(addVendorRequest.getName())

@@ -7,6 +7,8 @@ import com.example.courtreserve.database.repository.BookingRepository;
 import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.*;
+import com.example.courtreserve.exception.ForbiddenException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.CourtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,12 +33,13 @@ public class CourtServiceImpl implements CourtService {
     BookingRepository bookingRepository;
 
     public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
-        User vendor = userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        User vendor = userRepository.findById(vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", vendorId));
 
         boolean isVendor = vendor.getRoles().stream()
                 .anyMatch(role -> role.getName().equalsIgnoreCase("VENDOR"));
         if (!isVendor) {
-            throw new RuntimeException("not authorized");
+            throw new ForbiddenException("User is not authorized to add courts");
         }
 
         Court court = Court.builder()
@@ -87,7 +90,8 @@ public class CourtServiceImpl implements CourtService {
     }
 
     public GetSingleCourtVendorResponse getVendorCourtById(Long Id) {
-        Court court = courtRepository.findById(Id).orElseThrow(() -> new RuntimeException("Court Not Found"));
+        Court court = courtRepository.findById(Id)
+                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", Id));
 
         List<BookingResponse> bookingResponses = new ArrayList<>();
 
