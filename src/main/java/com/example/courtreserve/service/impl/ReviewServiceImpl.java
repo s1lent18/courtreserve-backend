@@ -8,6 +8,7 @@ import com.example.courtreserve.database.repository.ReviewRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddReviewRequest;
 import com.example.courtreserve.dto.AddReviewResponse;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,10 @@ public class ReviewServiceImpl implements ReviewService {
     private CourtRepository courtRepository;
 
     public AddReviewResponse addReview(AddReviewRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User not Found"));
-        Court court = courtRepository.findById(request.getFacilityId()).orElseThrow(() -> new RuntimeException("Court Not Found"));
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
+        Court court = courtRepository.findById(request.getFacilityId())
+                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", request.getFacilityId()));
 
         Review newReview = Review.builder()
                 .facility(court)

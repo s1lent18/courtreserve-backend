@@ -10,6 +10,8 @@ import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
 import com.example.courtreserve.dto.TeamAssociation;
+import com.example.courtreserve.exception.ConflictException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +43,8 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     public LoginUserResponse getUser(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User Not Found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
         return new LoginUserResponse(
                 user.getId(),
@@ -56,11 +59,11 @@ public class UserServiceImpl implements UserService {
     public AddUserResponse addNewUser(AddUserRequest addUserRequest) {
         boolean exists = userRepository.existsByEmail(addUserRequest.getEmail());
         if (exists) {
-            throw new RuntimeException("User with email " + addUserRequest.getEmail() + " already exists!");
+            throw new ConflictException("User", "email", addUserRequest.getEmail());
         }
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Default role USER not found. Please seed roles table."));
+                .orElseThrow(() -> new ResourceNotFoundException("Default role USER not found. Please seed roles table."));
 
         User newUser = User.builder()
                 .name(addUserRequest.getName())
@@ -87,7 +90,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public TeamAssociation findTeamAssociation(Long Id) {
-        User user = userRepository.findById(Id).orElseThrow(() -> new RuntimeException("User Not Found"));
+        User user = userRepository.findById(Id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", Id));
 
         Optional<Long> captainTeamId = teamRepository.findCaptainTeamId(user.getId());
 

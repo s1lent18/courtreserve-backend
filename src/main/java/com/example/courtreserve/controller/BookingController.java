@@ -2,7 +2,6 @@ package com.example.courtreserve.controller;
 
 import com.example.courtreserve.dto.AddBookingRequest;
 import com.example.courtreserve.service.BookingService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,17 +26,9 @@ public class BookingController {
     public ResponseEntity<?> createBooking(
             @RequestBody AddBookingRequest request
     ) {
-        try {
-            var booking = bookingService.createBooking(request);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "Booking created successfully", "booking", booking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var booking = bookingService.createBooking(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Booking created successfully", "booking", booking));
     }
 
     @GetMapping("/getAllBookings")
@@ -45,17 +36,9 @@ public class BookingController {
     public ResponseEntity<?> getAllBookings(
             @RequestParam Long id
     ) {
-        try {
-            var getBookings = bookingService.getAllBookings(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Bookings returned successfully", "bookings", getBookings));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var getBookings = bookingService.getAllBookings(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Bookings returned successfully", "bookings", getBookings));
     }
 
     @PostMapping("/{bookingId}/cancelBooking")
@@ -63,17 +46,9 @@ public class BookingController {
     public ResponseEntity<?> cancelBooking(
             @PathVariable Long bookingId
     ) {
-        try {
-            var canceledBooking = bookingService.cancelBooking(bookingId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Canceled", "canceledBooking", canceledBooking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var canceledBooking = bookingService.cancelBooking(bookingId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Booking Canceled", "canceledBooking", canceledBooking));
     }
 
     @GetMapping("/getPendingBookings")
@@ -81,17 +56,9 @@ public class BookingController {
     public ResponseEntity<?> getPendingBookings(
             @RequestParam Long id
     ) {
-        try {
-            var pendingBookings = bookingService.getPendingBooking(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Pending Bookings returned", "pendingBookings", pendingBookings));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var pendingBookings = bookingService.getPendingBooking(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Pending Bookings returned", "pendingBookings", pendingBookings));
     }
 
     @PostMapping("/{bookingId}/confirmBooking")
@@ -99,17 +66,9 @@ public class BookingController {
     public ResponseEntity<?> confirmBooking(
             @PathVariable Long bookingId
     ) {
-        try {
-            var confirmedBooking = bookingService.confirmBooking(bookingId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Confirmed", "confirmedBooking", confirmedBooking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var confirmedBooking = bookingService.confirmBooking(bookingId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Booking Confirmed", "confirmedBooking", confirmedBooking));
     }
 
     @PostMapping("/{bookingId}/rejectBooking")
@@ -117,17 +76,9 @@ public class BookingController {
     public ResponseEntity<?> rejectBooking(
             @PathVariable Long bookingId
     ) {
-        try {
-            var rejectedBooking = bookingService.rejectBooking(bookingId);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "Booking Rejected", "rejectedBooking", rejectedBooking));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        var rejectedBooking = bookingService.rejectBooking(bookingId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "Booking Rejected", "rejectedBooking", rejectedBooking));
     }
 
     @DeleteMapping("/{userId}/deleteBooking/{bookingId}")
@@ -136,16 +87,8 @@ public class BookingController {
             @PathVariable Long userId,
             @PathVariable Long bookingId
     ) {
-        try {
-            bookingService.deleteUserBooking(userId, bookingId);
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An internal error occurred"));
-        }
+        bookingService.deleteUserBooking(userId, bookingId);
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
     }
 
     @DeleteMapping("/{vendorId}/deleteBooking/{bookingId}")
@@ -154,15 +97,7 @@ public class BookingController {
             @PathVariable Long vendorId,
             @PathVariable Long bookingId
     ) {
-        try {
-            bookingService.deleteVendorBooking(vendorId, bookingId);
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An internal error occurred"));
-        }
+        bookingService.deleteVendorBooking(vendorId, bookingId);
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Booking deleted successfully"));
     }
 }

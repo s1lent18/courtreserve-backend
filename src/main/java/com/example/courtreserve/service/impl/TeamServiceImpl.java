@@ -3,6 +3,9 @@ package com.example.courtreserve.service.impl;
 import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.*;
 import com.example.courtreserve.dto.*;
+import com.example.courtreserve.exception.BadRequestException;
+import com.example.courtreserve.exception.ConflictException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,11 +40,11 @@ public class TeamServiceImpl implements TeamService {
     public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
         // Find the captain
         User captain = userRepository.findById(captainId)
-                .orElseThrow(() -> new RuntimeException("Captain not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Captain", "id", captainId));
 
         // Check if team name already exists
         if (teamRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Team name already exists");
+            throw new ConflictException("Team", "name", request.getName());
         }
 
         // Create the team
@@ -70,7 +73,7 @@ public class TeamServiceImpl implements TeamService {
             for (Long memberId : request.getMemberIds()) {
                 if (!memberId.equals(captainId)) { // Don't add captain twice
                     User member = userRepository.findById(memberId)
-                            .orElseThrow(() -> new RuntimeException("Member with ID " + memberId + " not found"));
+                            .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
 
                     TeamMember teamMember = TeamMember.builder()
                             .id(new TeamMemberId(savedTeam.getId(), memberId))
@@ -98,28 +101,28 @@ public class TeamServiceImpl implements TeamService {
     public JoinTournamentResponse joinTournament(JoinTournamentRequest request) {
         // Find the team
         Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
         // Find the tournament
         Tournament tournament = tournamentRepository.findById(request.getTournamentId())
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", request.getTournamentId()));
 
         // Check if tournament has already started or is completed/cancelled
         if ("IN_PROGRESS".equals(tournament.getStatus()) || 
             "COMPLETED".equals(tournament.getStatus()) || 
             "CANCELED".equals(tournament.getStatus()) || 
             "REJECTED".equals(tournament.getStatus())) {
-            throw new RuntimeException("Cannot join tournament. Tournament status is: " + tournament.getStatus());
+            throw new BadRequestException("Cannot join tournament. Tournament status is: " + tournament.getStatus());
         }
 
         // Check if team is already registered for this tournament
         if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
-            throw new RuntimeException("Team is already registered for this tournament");
+            throw new ConflictException("Team is already registered for this tournament");
         }
 
         // Check if team sport matches tournament sport
         if (!team.getSport().equalsIgnoreCase(tournament.getSport())) {
-            throw new RuntimeException("Team sport does not match tournament sport");
+            throw new BadRequestException("Team sport does not match tournament sport");
         }
 
         // Register team for tournament
@@ -142,7 +145,8 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public GetSingleTeamResponse getSingleTeam(Long id) {
-        Team team = teamRepository.findById(id).orElseThrow(() -> new RuntimeException("Team not Found"));
+        Team team = teamRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", id));
 
         List<GetTeamMembers> members = new ArrayList<>();
 
@@ -171,15 +175,15 @@ public class TeamServiceImpl implements TeamService {
     public TeamMemberResponse addTeamMember(AddTeamMemberRequest request) {
         // Find the team
         Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
         // Find the user
         User user = userRepository.findByEmail(request.getUserEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getUserEmail()));
 
         // Check if user is already a member of this team
         if (teamMemberRepository.existsByTeamAndUser(team, user)) {
-            throw new RuntimeException("User is already a member of this team");
+            throw new ConflictException("User is already a member of this team");
         }
 
         // Set default role if not provided
@@ -189,7 +193,7 @@ public class TeamServiceImpl implements TeamService {
 
         // Prevent adding another CAPTAIN
         if ("CAPTAIN".equalsIgnoreCase(role)) {
-            throw new RuntimeException("Cannot add another captain. Team already has a captain.");
+            throw new BadRequestException("Cannot add another captain. Team already has a captain.");
         }
 
         // Create team member
@@ -217,20 +221,20 @@ public class TeamServiceImpl implements TeamService {
     public void removeTeamMember(RemoveTeamMemberRequest request) {
         // Find the team
         Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
         // Find the user
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
 
         // Check if user is a member of this team
         if (!teamMemberRepository.existsByTeamAndUser(team, user)) {
-            throw new RuntimeException("User is not a member of this team");
+            throw new ResourceNotFoundException("User is not a member of this team");
         }
 
         // Prevent removing the captain
         if (team.getCaptain().getId().equals(request.getUserId())) {
-            throw new RuntimeException("Cannot remove the team captain. Transfer captaincy first or delete the team.");
+            throw new BadRequestException("Cannot remove the team captain. Transfer captaincy first or delete the team.");
         }
 
         // Remove the team member
@@ -242,27 +246,27 @@ public class TeamServiceImpl implements TeamService {
     public TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request) {
         // Find the team
         Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
         // Find the user
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
 
         // Find the team member
         TeamMemberId memberId = new TeamMemberId(request.getTeamId(), request.getUserId());
         TeamMember teamMember = teamMemberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Team member not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team member not found"));
 
         // Prevent changing captain role
         if ("CAPTAIN".equalsIgnoreCase(teamMember.getRole()) && 
             !"CAPTAIN".equalsIgnoreCase(request.getRole())) {
-            throw new RuntimeException("Cannot change captain's role. Transfer captaincy to another member first.");
+            throw new BadRequestException("Cannot change captain's role. Transfer captaincy to another member first.");
         }
 
         // Prevent setting another captain
         if ("CAPTAIN".equalsIgnoreCase(request.getRole()) && 
             !teamMember.getRole().equalsIgnoreCase("CAPTAIN")) {
-            throw new RuntimeException("Cannot set another captain. Transfer captaincy instead.");
+            throw new BadRequestException("Cannot set another captain. Transfer captaincy instead.");
         }
 
         // Update the role

@@ -3,6 +3,8 @@ package com.example.courtreserve.service.impl;
 import com.example.courtreserve.database.models.*;
 import com.example.courtreserve.database.repository.*;
 import com.example.courtreserve.dto.*;
+import com.example.courtreserve.exception.BadRequestException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,16 +35,16 @@ public class MatchServiceImpl implements MatchService {
     @Transactional
     public void generateBracket(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", tournamentId));
 
         if (!"CONFIRMED".equals(tournament.getStatus())) {
-            throw new RuntimeException("Tournament must be confirmed before generating bracket");
+            throw new BadRequestException("Tournament must be confirmed before generating bracket");
         }
 
         // Get all registered teams from repository
         List<TournamentTeam> tournamentTeams = tournamentTeamRepository.findByTournament(tournament);
         if (tournamentTeams == null || tournamentTeams.isEmpty()) {
-            throw new RuntimeException("No teams registered for tournament");
+            throw new BadRequestException("No teams registered for tournament");
         }
 
         List<Team> teams = tournamentTeams.stream()
@@ -57,7 +59,7 @@ public class MatchServiceImpl implements MatchService {
         } else if ("DOUBLE".equals(tournament.getEliminationType())) {
             generateDoubleEliminationBracket(tournament, teams);
         } else {
-            throw new RuntimeException("Invalid elimination type");
+            throw new BadRequestException("Invalid elimination type");
         }
 
         // Update tournament status
@@ -346,29 +348,29 @@ public class MatchServiceImpl implements MatchService {
     @Transactional
     public MatchResponse updateMatchResult(UpdateMatchResultRequest request) {
         Match match = matchRepository.findById(request.getMatchId())
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", "id", request.getMatchId()));
 
         if (!"SCHEDULED".equals(match.getStatus()) && !"PENDING".equals(match.getStatus())) {
-            throw new RuntimeException("Match is not in a state to be updated");
+            throw new BadRequestException("Match is not in a state to be updated");
         }
 
         Team winnerTeam = teamRepository.findById(request.getWinnerTeamId())
-                .orElseThrow(() -> new RuntimeException("Winner team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Winner team", "id", request.getWinnerTeamId()));
 
         if (!winnerTeam.equals(match.getTeam1()) && !winnerTeam.equals(match.getTeam2())) {
-            throw new RuntimeException("Winner team must be one of the teams in the match");
+            throw new BadRequestException("Winner team must be one of the teams in the match");
         }
 
         // Update match
         match.setWinnerTeam(winnerTeam);
         match.setStatus("COMPLETED");
-        match = matchRepository.save(match);
+        Match savedMatch = matchRepository.save(match);
 
         // Save scores
         if (request.getTeam1Score() != null) {
             Score score1 = Score.builder()
-                    .match(match)
-                    .team(match.getTeam1())
+                    .match(savedMatch)
+                    .team(savedMatch.getTeam1())
                     .score(request.getTeam1Score())
                     .remarks(request.getRemarks())
                     .build();
@@ -377,8 +379,8 @@ public class MatchServiceImpl implements MatchService {
 
         if (request.getTeam2Score() != null) {
             Score score2 = Score.builder()
-                    .match(match)
-                    .team(match.getTeam2())
+                    .match(savedMatch)
+                    .team(savedMatch.getTeam2())
                     .score(request.getTeam2Score())
                     .remarks(request.getRemarks())
                     .build();
@@ -386,11 +388,13 @@ public class MatchServiceImpl implements MatchService {
         }
 
         // Progress winner and loser to next matches
-        Team loserTeam = winnerTeam.equals(match.getTeam1()) ? match.getTeam2() : match.getTeam1();
+        Team loserTeam = winnerTeam.equals(savedMatch.getTeam1()) ? savedMatch.getTeam2() : savedMatch.getTeam1();
 
         // Progress winner
-        if (match.getNextWinnerMatch() != null) {
-            Match nextMatch = matchRepository.findById(match.getNextWinnerMatch()).orElseThrow(() -> new RuntimeException("Match not Found"));
+        Long nextWinnerMatchId = savedMatch.getNextWinnerMatch();
+        if (nextWinnerMatchId != null) {
+            Match nextMatch = matchRepository.findById(nextWinnerMatchId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Match", "id", nextWinnerMatchId));
             if (nextMatch.getTeam1() == null) {
                 nextMatch.setTeam1(winnerTeam);
             } else if (nextMatch.getTeam2() == null) {
@@ -400,8 +404,10 @@ public class MatchServiceImpl implements MatchService {
         }
 
         // Progress loser (double elimination only)
-        if (match.getNextLoserMatch() != null && loserTeam != null) {
-            Match nextLoserMatch = matchRepository.findById(match.getNextLoserMatch()).orElseThrow(() -> new RuntimeException("Match not Found"));
+        Long nextLoserMatchId = savedMatch.getNextLoserMatch();
+        if (nextLoserMatchId != null && loserTeam != null) {
+            Match nextLoserMatch = matchRepository.findById(nextLoserMatchId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Match", "id", nextLoserMatchId));
             if (nextLoserMatch.getTeam1() == null) {
                 nextLoserMatch.setTeam1(loserTeam);
             } else if (nextLoserMatch.getTeam2() == null) {
@@ -411,24 +417,24 @@ public class MatchServiceImpl implements MatchService {
         }
 
         // Check if tournament is complete
-        checkTournamentCompletion(match.getTournament());
+        checkTournamentCompletion(savedMatch.getTournament());
 
         return new MatchResponse(
-                match.getId(),
-                match.getTournament().getId(),
-                match.getTournament().getName(),
-                match.getCourt().getId(),
-                match.getCourt().getName(),
-                match.getTeam1().getId(),
-                match.getTeam1().getName(),
-                match.getTeam2().getId(),
-                match.getTeam2().getName(),
-                match.getStatus(),
-                match.getRound(),
-                match.getBracketType(),
-                match.getMatchPosition(),
-                match.getNextWinnerMatch(),
-                match.getNextLoserMatch()
+                savedMatch.getId(),
+                savedMatch.getTournament().getId(),
+                savedMatch.getTournament().getName(),
+                savedMatch.getCourt().getId(),
+                savedMatch.getCourt().getName(),
+                savedMatch.getTeam1().getId(),
+                savedMatch.getTeam1().getName(),
+                savedMatch.getTeam2().getId(),
+                savedMatch.getTeam2().getName(),
+                savedMatch.getStatus(),
+                savedMatch.getRound(),
+                savedMatch.getBracketType(),
+                savedMatch.getMatchPosition(),
+                savedMatch.getNextWinnerMatch(),
+                savedMatch.getNextLoserMatch()
         );
     }
 
@@ -447,7 +453,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public GetTournamentBracketResponse getTournamentBracket(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", tournamentId));
 
         List<Match> allMatches = matchRepository.findByTournament(tournament);
 
@@ -480,10 +486,10 @@ public class MatchServiceImpl implements MatchService {
     @Transactional
     public MatchResponse scheduleMatch(ScheduleMatchRequest request) {
         Match match = matchRepository.findById(request.getMatchId())
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", "id", request.getMatchId()));
 
         if (match.getTeam1() == null || match.getTeam2() == null) {
-            throw new RuntimeException("Both teams must be assigned before scheduling");
+            throw new BadRequestException("Both teams must be assigned before scheduling");
         }
 
         match.setStartTime(request.getStartTime());
@@ -514,7 +520,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public List<GetMatchResponse> getUnscheduledMatches(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", tournamentId));
 
         List<Match> matches = matchRepository.findByTournament(tournament);
 
@@ -529,7 +535,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public GetMatchResponse getMatchById(Long matchId) {
         Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", "id", matchId));
 
         return convertToMatchResponse(match);
     }
@@ -567,4 +573,3 @@ public class MatchServiceImpl implements MatchService {
         return response;
     }
 }
-

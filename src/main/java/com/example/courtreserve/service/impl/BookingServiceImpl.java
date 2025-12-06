@@ -10,6 +10,8 @@ import com.example.courtreserve.dto.AddBookingRequest;
 import com.example.courtreserve.dto.AddBookingResponse;
 import com.example.courtreserve.dto.BookingResponse;
 import com.example.courtreserve.dto.GetBookingResponse;
+import com.example.courtreserve.exception.ForbiddenException;
+import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -41,7 +43,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Cacheable(value = "bookings", key = "#userId")
     public List<GetBookingResponse> getAllBookings (Long userId) {
-        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User Not Found"));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         List<Booking> bookings = bookingRepository.findAllByUser_Id(userId);
         List<GetBookingResponse> getBookingResponses = new ArrayList<>();
@@ -68,8 +71,10 @@ public class BookingServiceImpl implements BookingService {
 
     @CacheEvict(value = "bookings", key = "#request.userId")
     public AddBookingResponse createBooking(AddBookingRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User Not Found"));
-        Court court = courtRepository.findById(request.getFacilityId()).orElseThrow(() -> new RuntimeException("Court Not Found"));
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
+        Court court = courtRepository.findById(request.getFacilityId())
+                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", request.getFacilityId()));
 
         Booking newBooking = Booking.builder()
                 .user(user)
@@ -102,7 +107,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     public List<BookingResponse> getPendingBooking(Long vendorId) {
-        userRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        userRepository.findById(vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", vendorId));
 
         List<Long> courtIds = courtRepository.findCourtIdsByVendorId(vendorId);
 
@@ -133,7 +139,8 @@ public class BookingServiceImpl implements BookingService {
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
     public BookingResponse confirmBooking(Long bookingId) {
-        Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        Booking pendingBooking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -163,7 +170,8 @@ public class BookingServiceImpl implements BookingService {
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
     public BookingResponse rejectBooking(Long bookingId) {
-        Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        Booking pendingBooking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
         pendingBooking.setStatus("REJECTED");
 
@@ -187,7 +195,8 @@ public class BookingServiceImpl implements BookingService {
 
     @CacheEvict(value = "bookings", key = "#result.user.id")
     public BookingResponse cancelBooking(Long bookingId) {
-        Booking pendingBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        Booking pendingBooking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
         pendingBooking.setStatus("CANCELED");
 
@@ -212,12 +221,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void deleteUserBooking(Long Id, Long bookingId) {
 
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
-        userRepository.findById(Id).orElseThrow(() -> new RuntimeException("User Not Found"));
+        userRepository.findById(Id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", Id));
 
         if (!Id.equals(booking.getUser().getId())) {
-            throw new RuntimeException("Booking doesn't belong to user");
+            throw new ForbiddenException("Booking doesn't belong to user");
         }
 
         booking.setDeletedByUser(true);
@@ -228,12 +239,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void deleteVendorBooking(Long Id, Long bookingId) {
 
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
-        userRepository.findById(Id).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        userRepository.findById(Id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", Id));
 
         if (!Id.equals(booking.getFacility().getVendor().getId())) {
-            throw new RuntimeException("Booking doesn't belong to vendor");
+            throw new ForbiddenException("Booking doesn't belong to vendor");
         }
 
         booking.setDeletedByVendor(true);
