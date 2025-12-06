@@ -107,4 +107,34 @@ public class TeamController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/generateCode")
+    public ResponseEntity<?> generateCode(
+            @RequestParam Long teamId
+    ) {
+        try {
+            var code = teamService.generateCode(teamId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "OTP Code", "code", code));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<?> validate(
+            @RequestBody ValidateOTP validateOTP
+    ) {
+        try {
+            var code = teamService.validateCode(validateOTP);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("message", "OTP Validation", "singleTeam", code));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

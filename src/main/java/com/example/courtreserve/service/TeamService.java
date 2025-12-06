@@ -16,4 +16,8 @@ public interface TeamService {
     void removeTeamMember(RemoveTeamMemberRequest request);
 
     TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request);
+
+    String generateCode(Long teamId);
+
+    GetSingleTeamResponse validateCode(ValidateOTP validateOTP);
 }

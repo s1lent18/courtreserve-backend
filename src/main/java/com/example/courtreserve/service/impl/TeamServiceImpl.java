@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -28,6 +30,8 @@ public class TeamServiceImpl implements TeamService {
 
     @Autowired
     private TournamentTeamRepository tournamentTeamRepository;
+
+    private final Map<Long, String> teamCodes = new ConcurrentHashMap<>();
 
     @Override
     public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
@@ -273,5 +277,63 @@ public class TeamServiceImpl implements TeamService {
                 teamMember.getRole(),
                 teamMember.getJoinedAt()
         );
+    }
+
+    @Override
+    public String generateCode(Long teamId) {
+        String code = String.valueOf((int)(Math.random() * 9000) + 1000);
+        teamCodes.put(teamId, code);
+        return code;
+    }
+
+    @Override
+    public GetSingleTeamResponse validateCode(ValidateOTP validateOTP) {
+
+        Team team = teamRepository.findById(validateOTP.getTeamId()).orElseThrow(() -> new RuntimeException("Team Not Found"));
+
+        User user = userRepository.findById(validateOTP.getId()).orElseThrow(() -> new RuntimeException("User Not Found"));
+
+        if (validateOTP.getCode().equals(teamCodes.get(validateOTP.getTeamId()))) {
+
+            TeamMemberId teamMemberId = new TeamMemberId(
+                    validateOTP.getTeamId(),
+                    validateOTP.getId()
+            );
+
+            TeamMember teamMember = new TeamMember(
+                    teamMemberId,
+                    team,
+                    user,
+                    "MEMBER",
+                    LocalDateTime.now()
+            );
+
+            teamMemberRepository.save(teamMember);
+
+            List<GetTeamMembers> teamMembers = new ArrayList<>();
+
+            for (TeamMember teamMemberLoop : team.getMembers()) {
+                GetTeamMembers getTeamMembers = new GetTeamMembers(
+                        teamMemberLoop.getId(),
+                        teamMemberLoop.getUser().getId(),
+                        teamMemberLoop.getUser().getName(),
+                        teamMemberLoop.getRole(),
+                        teamMemberLoop.getUser().getCoverImage()
+                );
+                teamMembers.add(getTeamMembers);
+            }
+
+            return new GetSingleTeamResponse(
+                    team.getId(),
+                    team.getName(),
+                    team.getSport(),
+                    team.getCaptain().getId(),
+                    team.getCaptain().getName(),
+                    teamMembers
+            );
+        }
+        else {
+            return null;
+        }
     }
 }
