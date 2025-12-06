@@ -2,6 +2,7 @@ package com.example.courtreserve.controller;
 
 import com.example.courtreserve.dto.*;
 import com.example.courtreserve.service.TeamService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
