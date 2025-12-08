@@ -74,10 +74,10 @@ public class TeamController {
 
     @PostMapping("/generateCode")
     public ResponseEntity<?> generateCode(
-            @RequestParam Long teamId
+            @RequestParam String captainEmail
     ) {
         try {
-            var code = teamService.generateCode(teamId);
+            var code = teamService.generateCode(captainEmail);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(Map.of("message", "OTP Code", "code", code));
         } catch (EntityNotFoundException e) {

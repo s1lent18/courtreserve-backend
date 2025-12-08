@@ -17,7 +17,7 @@ public interface TeamService {
 
     TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request);
 
-    String generateCode(Long teamId);
+    String generateCode(String captainEmail);
 
     GetSingleTeamResponse validateCode(ValidateOTP validateOTP);
 }

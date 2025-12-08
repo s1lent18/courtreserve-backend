@@ -27,4 +27,5 @@ public class GetSingleTournamentResponse {
     String eliminationType;
     Boolean isAutoMode;
     String entrance;
+    List<SingleMatchResponse> matches;
 }

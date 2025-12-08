@@ -1,11 +1,7 @@
 package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.*;
-import com.example.courtreserve.database.repository.CourtRepository;
-import com.example.courtreserve.database.repository.TeamRepository;
-import com.example.courtreserve.database.repository.TournamentRepository;
-import com.example.courtreserve.database.repository.TournamentTeamRepository;
-import com.example.courtreserve.database.repository.UserRepository;
+import com.example.courtreserve.database.repository.*;
 import com.example.courtreserve.dto.*;
 import com.example.courtreserve.exception.BadRequestException;
 import com.example.courtreserve.exception.ConflictException;
@@ -38,6 +34,9 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Autowired
     private TeamRepository teamRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
 
     @Autowired
     private TournamentTeamRepository tournamentTeamRepository;
@@ -281,7 +280,26 @@ public class TournamentServiceImpl implements TournamentService {
 
         List<GetTournamentTeam> teams = new ArrayList<>();
 
-        // Query tournament teams directly from repository
+        List<Match> matches = matchRepository.findByTournament(tournament);
+
+        List<SingleMatchResponse> matchResponses = matches.stream()
+                .map(match -> new SingleMatchResponse(
+                        match.getId(),
+                        match.getTeam1().getId(),
+                        match.getTeam1().getName(),
+                        match.getTeam2().getId(),
+                        match.getTeam2().getName(),
+                        match.getStartTime(),
+                        match.getEndTime(),
+                        match.getStatus(),
+                        match.getBracketType(),
+                        match.getMatchPosition(),
+                        match.getWinnerTeam().getId(),
+                        match.getNextWinnerMatch(),
+                        match.getNextLoserMatch()
+                ))
+                .toList();
+
         List<TournamentTeam> tournamentTeams = tournamentTeamRepository.findByTournament(tournament);
         for (TournamentTeam tournamentTeam : tournamentTeams) {
             GetTournamentTeam team = new GetTournamentTeam(
@@ -306,7 +324,8 @@ public class TournamentServiceImpl implements TournamentService {
                 teams,
                 tournament.getEliminationType(),
                 tournament.getIsAutoMode(),
-                tournament.getEntrance()
+                tournament.getEntrance(),
+                matchResponses
         );
     }
 

@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ValidateOTP {
-    Long teamId;
+    String captainEmail;
     Long Id;
     String code;
 }

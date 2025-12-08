@@ -34,7 +34,7 @@ public class TeamServiceImpl implements TeamService {
     @Autowired
     private TournamentTeamRepository tournamentTeamRepository;
 
-    private final Map<Long, String> teamCodes = new ConcurrentHashMap<>();
+    private final Map<String, String> teamCodes = new ConcurrentHashMap<>();
 
     @Override
     public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
@@ -284,23 +284,25 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
-    public String generateCode(Long teamId) {
+    public String generateCode(String captainEmail) {
         String code = String.valueOf((int)(Math.random() * 9000) + 1000);
-        teamCodes.put(teamId, code);
+        teamCodes.put(captainEmail, code);
         return code;
     }
 
     @Override
     public GetSingleTeamResponse validateCode(ValidateOTP validateOTP) {
 
-        Team team = teamRepository.findById(validateOTP.getTeamId()).orElseThrow(() -> new RuntimeException("Team Not Found"));
+        User captain = userRepository.findByEmail(validateOTP.getCaptainEmail()).orElseThrow(() -> new RuntimeException("Team Not Found"));
 
         User user = userRepository.findById(validateOTP.getId()).orElseThrow(() -> new RuntimeException("User Not Found"));
 
-        if (validateOTP.getCode().equals(teamCodes.get(validateOTP.getTeamId()))) {
+        Team team = teamRepository.findByCaptain_Id(captain.getId()).orElseThrow(() -> new RuntimeException("Team Not Found"));
+
+        if (validateOTP.getCode().equals(teamCodes.get(validateOTP.getCaptainEmail()))) {
 
             TeamMemberId teamMemberId = new TeamMemberId(
-                    validateOTP.getTeamId(),
+                    team.getId(),
                     validateOTP.getId()
             );
 
