@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class MatchRequest {
 
     @Id
@@ -27,12 +27,25 @@ public class MatchRequest {
     @JoinColumn(name = "court_id")
     private Court court;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+
     @Column(name = "sport_type")
     private String sportType;
 
     private LocalDate date;
 
-    private String status;
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    private String status; // OPEN, FULFILLED, CANCELLED
+
+    @Column(name = "request_type")
+    private String requestType; // USER_SEEKING_TEAM, TEAM_SEEKING_PLAYER
 
     @Column(name = "looking_for")
     private String lookingFor;

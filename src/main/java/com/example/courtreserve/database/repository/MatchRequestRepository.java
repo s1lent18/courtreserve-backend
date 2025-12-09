@@ -17,4 +17,8 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
     List<MatchRequest> findByCourtAndDate(Court court, LocalDate date);
 
     List<MatchRequest> findByStatus(String status);
+
+    List<MatchRequest> findByRequestType(String requestType);
+
+    List<MatchRequest> findByCourtAndDateAndStatus(Court court, LocalDate date, String status);
 }

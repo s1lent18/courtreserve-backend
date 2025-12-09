@@ -1,21 +1,10 @@
 package com.example.courtreserve.service;
 
-import com.example.courtreserve.database.models.Role;
 import com.example.courtreserve.database.models.User;
-import com.example.courtreserve.database.repository.RoleRepository;
-import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
 import com.example.courtreserve.dto.TeamAssociation;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 public interface UserService {
 
@@ -24,4 +13,8 @@ public interface UserService {
     AddUserResponse addNewUser(AddUserRequest addUserRequest);
 
     TeamAssociation findTeamAssociation(Long Id);
+
+    User findById(Long id);
+
+    User findByEmail(String email);
 }

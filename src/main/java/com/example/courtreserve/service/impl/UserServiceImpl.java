@@ -24,82 +24,92 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Value("${defaultImage.url}")
-    String coverImage;
+        @Value("${defaultImage.url}")
+        String coverImage;
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+        @Autowired
+        private RoleRepository roleRepository;
 
-    @Autowired
-    private TeamRepository teamRepository;
+        @Autowired
+        private TeamRepository teamRepository;
 
-    @Autowired
-    private TeamMemberRepository teamMemberRepository;
+        @Autowired
+        private TeamMemberRepository teamMemberRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+        @Autowired
+        private PasswordEncoder passwordEncoder;
 
-    public LoginUserResponse getUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        public LoginUserResponse getUser(String email) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
-        return new LoginUserResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getCreated(),
-                user.getLocation(),
-                user.getCoverImage()
-        );
-    }
-
-    public AddUserResponse addNewUser(AddUserRequest addUserRequest) {
-        boolean exists = userRepository.existsByEmail(addUserRequest.getEmail());
-        if (exists) {
-            throw new ConflictException("User", "email", addUserRequest.getEmail());
+                return new LoginUserResponse(
+                                user.getId(),
+                                user.getName(),
+                                user.getEmail(),
+                                user.getCreated(),
+                                user.getLocation(),
+                                user.getCoverImage());
         }
 
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new ResourceNotFoundException("Default role USER not found. Please seed roles table."));
+        public AddUserResponse addNewUser(AddUserRequest addUserRequest) {
+                boolean exists = userRepository.existsByEmail(addUserRequest.getEmail());
+                if (exists) {
+                        throw new ConflictException("User", "email", addUserRequest.getEmail());
+                }
 
-        User newUser = User.builder()
-                .name(addUserRequest.getName())
-                .email(addUserRequest.getEmail())
-                .password(passwordEncoder.encode(addUserRequest.getPassword()))
-                .location(addUserRequest.getLocation())
-                .created(LocalDateTime.now())
-                .coverImage(coverImage)
-                .build();
+                Role userRole = roleRepository.findByName("USER")
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Default role USER not found. Please seed roles table."));
 
-        newUser.getRoles().add(userRole);
+                User newUser = User.builder()
+                                .name(addUserRequest.getName())
+                                .email(addUserRequest.getEmail())
+                                .password(passwordEncoder.encode(addUserRequest.getPassword()))
+                                .location(addUserRequest.getLocation())
+                                .created(LocalDateTime.now())
+                                .coverImage(coverImage)
+                                .build();
 
-        User savedUser = userRepository.save(newUser);
+                newUser.getRoles().add(userRole);
 
-        return new AddUserResponse(
-                savedUser.getId(),
-                savedUser.getName(),
-                savedUser.getEmail(),
-                savedUser.getLocation(),
-                savedUser.getCoverImage(),
-                savedUser.getCreated()
-        );
-    }
+                User savedUser = userRepository.save(newUser);
 
-    @Override
-    public TeamAssociation findTeamAssociation(Long Id) {
-        User user = userRepository.findById(Id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", Id));
+                return new AddUserResponse(
+                                savedUser.getId(),
+                                savedUser.getName(),
+                                savedUser.getEmail(),
+                                savedUser.getLocation(),
+                                savedUser.getCoverImage(),
+                                savedUser.getCreated());
+        }
 
-        Optional<Long> captainTeamId = teamRepository.findCaptainTeamId(user.getId());
+        @Override
+        public TeamAssociation findTeamAssociation(Long Id) {
+                User user = userRepository.findById(Id)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", Id));
 
-        Optional<Long> memberTeamId = teamMemberRepository.findMemberTeamIds(user.getId());
+                Optional<Long> captainTeamId = teamRepository.findCaptainTeamId(user.getId());
 
-        return new TeamAssociation(
-                captainTeamId.orElse(null),
-                memberTeamId.orElse(null)
-        );
-    }
+                Optional<Long> memberTeamId = teamMemberRepository.findMemberTeamIds(user.getId());
+
+                return new TeamAssociation(
+                                captainTeamId.orElse(null),
+                                memberTeamId.orElse(null));
+        }
+
+        @Override
+        public User findById(Long id) {
+                return userRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        }
+
+        @Override
+        public User findByEmail(String email) {
+                return userRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        }
 }
