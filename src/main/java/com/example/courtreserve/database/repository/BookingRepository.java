@@ -2,7 +2,6 @@ package com.example.courtreserve.database.repository;
 
 import com.example.courtreserve.database.models.Booking;
 import com.example.courtreserve.dto.BookingTimeProjection;
-import com.example.courtreserve.service.BookingService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,5 +21,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b WHERE b.facility.id IN :courtIds AND b.status = 'PENDING'")
     List<Booking> findPendingBookings(@Param("courtIds") List<Long> courtIds);
 
-    List<Booking> findAllByUser_Id(Long Id);
+    List<Booking> findAllByUser_Id(Long id);
+
+    boolean existsByUser_Id(Long userId);
+
+    boolean existsByFacility_Id(Long facilityId);
 }

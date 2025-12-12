@@ -8,6 +8,7 @@ import com.example.courtreserve.database.repository.CourtRepository;
 import com.example.courtreserve.database.repository.UserRepository;
 import com.example.courtreserve.dto.*;
 import com.example.courtreserve.exception.ForbiddenException;
+import com.example.courtreserve.exception.ForeignKeyConstraintException;
 import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.CourtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,26 +24,26 @@ import java.util.List;
 @Service
 public class CourtServiceImpl implements CourtService {
 
-    @Autowired
-    UserRepository userRepository;
+        @Autowired
+        UserRepository userRepository;
 
-    @Autowired
-    CourtRepository courtRepository;
+        @Autowired
+        CourtRepository courtRepository;
 
-    @Autowired
-    BookingRepository bookingRepository;
+        @Autowired
+        BookingRepository bookingRepository;
 
-    public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
-        User vendor = userRepository.findById(vendorId)
+        public AddCourtResponse addCourt(Long vendorId, AddCourtRequest request) {
+            User vendor = userRepository.findById(vendorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor", "id", vendorId));
 
-        boolean isVendor = vendor.getRoles().stream()
+            boolean isVendor = vendor.getRoles().stream()
                 .anyMatch(role -> role.getName().equalsIgnoreCase("VENDOR"));
-        if (!isVendor) {
-            throw new ForbiddenException("User is not authorized to add courts");
-        }
+            if (!isVendor) {
+                    throw new ForbiddenException("User is not authorized to add courts");
+            }
 
-        Court court = Court.builder()
+            Court court = Court.builder()
                 .vendor(vendor)
                 .name(request.getName())
                 .description(request.getDescription())
@@ -54,9 +55,9 @@ public class CourtServiceImpl implements CourtService {
                 .created(LocalDateTime.now())
                 .build();
 
-        Court savedCourt = courtRepository.save(court);
+            Court savedCourt = courtRepository.save(court);
 
-        return new AddCourtResponse(
+            return new AddCourtResponse(
                 savedCourt.getId(),
                 savedCourt.getName(),
                 savedCourt.getDescription(),
@@ -64,16 +65,15 @@ public class CourtServiceImpl implements CourtService {
                 savedCourt.getPrice(),
                 savedCourt.getOpenTime().toString(),
                 savedCourt.getCloseTime().toString(),
-                savedCourt.getType()
-        );
-    }
+                savedCourt.getType());
+        }
 
-    public GetSingleCourtResponse getCourtById(Long Id) {
-        GetPopularCourts courtInfo = courtRepository.findByPopularId(Id);
+        public GetSingleCourtResponse getCourtById(Long Id) {
+            GetPopularCourts courtInfo = courtRepository.findByPopularId(Id);
 
-        List<BookingTimeProjection> reservedTimes = bookingRepository.findBookingTimesByCourtId(Id);
+            List<BookingTimeProjection> reservedTimes = bookingRepository.findBookingTimesByCourtId(Id);
 
-        return new GetSingleCourtResponse(
+            return new GetSingleCourtResponse(
                 courtInfo.getId(),
                 courtInfo.getName(),
                 courtInfo.getDescription(),
@@ -86,34 +86,23 @@ public class CourtServiceImpl implements CourtService {
                 courtInfo.getBookingCount(),
                 courtInfo.getAvgRating(),
                 reservedTimes
-        );
-    }
-
-    public GetSingleCourtVendorResponse getVendorCourtById(Long Id) {
-        Court court = courtRepository.findById(Id)
-                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", Id));
-
-        List<BookingResponse> bookingResponses = new ArrayList<>();
-
-        for (Booking booking : court.getBookings()) {
-            BookingResponse temp = new BookingResponse(
-                    booking.getId(),
-                    booking.getUser().getId(),
-                    booking.getUser().getName(),
-                    booking.getFacility().getId(),
-                    booking.getFacility().getName(),
-                    booking.getStartTime(),
-                    booking.getEndTime(),
-                    booking.getStatus(),
-                    booking.getPrice(),
-                    booking.getAdvance(),
-                    booking.getToBePaid(),
-                    booking.getCreated()
             );
-            bookingResponses.add(temp);
         }
 
-        return new GetSingleCourtVendorResponse(
+        public GetSingleCourtVendorResponse getVendorCourtById(Long id) {
+            Court court = courtRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Court", "id", id));
+
+            int size = (int) court.getBookings().stream()
+                .filter(b -> "CONFIRMED".equals(b.getStatus()))
+                .count();
+
+            int sales = court.getBookings().stream()
+                .filter(b -> "CONFIRMED".equals(b.getStatus()))
+                .mapToInt(Booking::getPrice)
+                .sum();
+
+            return new GetSingleCourtVendorResponse(
                 court.getId(),
                 court.getCloseTime(),
                 court.getCreated(),
@@ -123,29 +112,62 @@ public class CourtServiceImpl implements CourtService {
                 court.getOpenTime(),
                 court.getPrice(),
                 court.getType(),
-                bookingResponses
-        );
-    }
+                size,
+                sales
+            );
+        }
 
-    public List<GetPopularCourts> getCourtsOfVendor(Long Id) {
-        return courtRepository.findAllOfSingleVendor(Id);
-    }
+        public List<GetPopularCourts> getCourtsOfVendor(Long Id) {
+                return courtRepository.findAllOfSingleVendor(Id);
+        }
 
-    @Override
-    public PaginatedResponse<GetPopularCourts> getPopularCourts(String location, Pageable pageable) {
-        Page<GetPopularCourts> courtsPage = courtRepository.findCourtStatsByCount(location, pageable);
+        @Override
+        public PaginatedResponse<GetPopularCourts> getPopularCourts(String location, Pageable pageable) {
+            Page<GetPopularCourts> courtsPage = courtRepository.findCourtStatsByCount(location, pageable);
 
-        return new PaginatedResponse<>(
+            return new PaginatedResponse<>(
                 courtsPage.getNumber(),
                 courtsPage.getSize(),
                 courtsPage.getTotalPages(),
                 courtsPage.getTotalElements(),
                 courtsPage.getContent()
-        );
-    }
+            );
+        }
 
-    @Override
-    public String removeCourt(Long Id) {
-        return "";
-    }
+        @Override
+        public String removeCourt(Long Id) {
+            Court court = courtRepository.findById(Id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Court", "id", Id));
+
+            List<String> dependencies = new ArrayList<>();
+
+            if (bookingRepository.existsByFacility_Id(Id)) {
+                    dependencies.add("Bookings");
+            }
+
+            if (!dependencies.isEmpty()) {
+                    throw new ForeignKeyConstraintException("Court", Id, dependencies);
+            }
+
+            courtRepository.delete(court);
+            return "Court deleted successfully";
+        }
+
+        @Override
+        public PaginatedResponse<GetPopularCourts> searchCourts(String query, Pageable pageable) {
+                Page<Court> courtsPage = courtRepository.
+                    findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(query, query, pageable);
+
+                List<GetPopularCourts> courtsList = courtsPage.getContent().stream()
+                    .map(court -> courtRepository.findByPopularId(court.getId()))
+                    .toList();
+
+                return new PaginatedResponse<>(
+                    courtsPage.getNumber(),
+                    courtsPage.getSize(),
+                    courtsPage.getTotalPages(),
+                    courtsPage.getTotalElements(),
+                    courtsList
+                );
+        }
 }

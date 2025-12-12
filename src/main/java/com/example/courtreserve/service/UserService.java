@@ -5,6 +5,7 @@ import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
 import com.example.courtreserve.dto.TeamAssociation;
+import com.example.courtreserve.dto.UpdateUserRequest;
 
 public interface UserService {
 
@@ -17,4 +18,8 @@ public interface UserService {
     User findById(Long id);
 
     User findByEmail(String email);
+
+    LoginUserResponse updateUser(Long id, UpdateUserRequest request);
+
+    void deleteUser(Long id);
 }

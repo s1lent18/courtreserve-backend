@@ -33,21 +33,18 @@ public class VendorController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, AddVendorResponse>> registerVendor(
-            @RequestBody AddVendorRequest request
-    ) {
+            @RequestBody AddVendorRequest request) {
         Map<String, AddVendorResponse> response = new HashMap<>();
-        AddVendorResponse addUserResponse = vendorService.addNewVendor(request);
-        response.put("registerVendorData", addUserResponse);
+        AddVendorResponse addVendorResponse = vendorService.addNewVendor(request);
+        response.put("registerVendorData", addVendorResponse);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, LoginVendorResponse>> loginUser(
-            @RequestBody LoginVendorRequest request
-    ) {
+    public ResponseEntity<Map<String, LoginVendorResponse>> loginVendor(
+            @RequestBody LoginVendorRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         LoginVendorResponse req = vendorService.getVendor(request.getEmail());
@@ -56,6 +53,25 @@ public class VendorController {
         Map<String, LoginVendorResponse> response = new HashMap<>();
         response.put("vendorData", req);
 
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, LoginVendorResponse>> updateVendor(
+            @PathVariable Long id,
+            @RequestBody UpdateVendorRequest request) {
+        LoginVendorResponse updatedVendor = vendorService.updateVendor(id, request);
+        Map<String, LoginVendorResponse> response = new HashMap<>();
+        response.put("vendorData", updatedVendor);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteVendor(
+            @PathVariable Long id) {
+        vendorService.deleteVendor(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Vendor deleted successfully");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

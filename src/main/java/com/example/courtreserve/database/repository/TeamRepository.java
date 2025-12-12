@@ -18,4 +18,6 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Long> findCaptainTeamId(@Param("userId") Long userId);
 
     Optional<Team> findByCaptain_Id(Long id);
+
+    boolean existsByCaptain_Id(Long userId);
 }

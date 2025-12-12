@@ -22,4 +22,6 @@ public interface TournamentService {
     GetSingleTournamentResponse getSingleTournament(Long Id);
 
     TournamentResponse startTournament(Long tournamentId);
+
+    TournamentResponse hostedTournament(Long userId);
 }

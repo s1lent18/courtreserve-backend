@@ -14,4 +14,6 @@ public interface MatchRequestApplicationRepository extends JpaRepository<MatchRe
     List<MatchRequestApplication> findByMatchRequest(MatchRequest matchRequest);
 
     List<MatchRequestApplication> findByApplicant(User applicant);
+
+    boolean existsByApplicant_Id(Long userId);
 }

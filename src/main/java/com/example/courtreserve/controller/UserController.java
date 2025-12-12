@@ -37,8 +37,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, AddUserResponse>> registerUser(
-            @RequestBody AddUserRequest request
-    ) {
+            @RequestBody AddUserRequest request) {
         Map<String, AddUserResponse> response = new HashMap<>();
         AddUserResponse addUserResponse = userService.addNewUser(request);
         response.put("registerUserData", addUserResponse);
@@ -47,11 +46,9 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, LoginUserResponse>> loginUser(
-            @RequestBody LoginUserRequest request
-    ) {
+            @RequestBody LoginUserRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         LoginUserResponse req = userService.getUser(request.getEmail());
@@ -65,10 +62,28 @@ public class UserController {
 
     @GetMapping("/association")
     public ResponseEntity<?> teamAssociation(
-            @RequestParam Long Id
-    ) {
+            @RequestParam Long Id) {
         var teamAssociation = userService.findTeamAssociation(Id);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Team Association", "teamAssociation", teamAssociation));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, LoginUserResponse>> updateUser(
+            @PathVariable Long id,
+            @RequestBody UpdateUserRequest request) {
+        LoginUserResponse updatedUser = userService.updateUser(id, request);
+        Map<String, LoginUserResponse> response = new HashMap<>();
+        response.put("userData", updatedUser);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteUser(
+            @PathVariable Long id) {
+        userService.deleteUser(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User deleted successfully");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

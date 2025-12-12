@@ -28,20 +28,22 @@ public class MatchRequestController {
     @PostMapping
     public ResponseEntity<?> createMatchRequest(
             @RequestBody AddMatchRequestRequest request,
-            Authentication authentication) {
+            Authentication authentication
+    ) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         var user = userService.findByEmail(userDetails.getUsername());
 
         MatchRequestResponse response = matchRequestService.createMatchRequest(request, user.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Match request created successfully", "matchRequest", response));
+            .body(Map.of("message", "Match request created successfully", "matchRequest", response));
     }
 
     @GetMapping
     public ResponseEntity<?> getMatchRequests(
-            @RequestParam(required = false) String requestType,
-            @RequestParam(required = false) Long courtId,
-            @RequestParam(required = false) LocalDate date) {
+        @RequestParam(required = false) String requestType,
+        @RequestParam(required = false) Long courtId,
+        @RequestParam(required = false) LocalDate date
+    ) {
         List<MatchRequestResponse> requests = matchRequestService.getMatchRequests(requestType, courtId, date);
         return ResponseEntity.ok(Map.of("matchRequests", requests));
     }
@@ -57,9 +59,10 @@ public class MatchRequestController {
 
     @PostMapping("/{id}/apply")
     public ResponseEntity<?> applyToMatchRequest(
-            @PathVariable Long id,
-            @RequestBody MatchRequestApplicationRequest request,
-            Authentication authentication) {
+        @PathVariable Long id,
+        @RequestBody MatchRequestApplicationRequest request,
+        Authentication authentication
+    ) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         var user = userService.findByEmail(userDetails.getUsername());
 
@@ -70,9 +73,10 @@ public class MatchRequestController {
 
     @PostMapping("/applications/{applicationId}/respond")
     public ResponseEntity<?> respondToApplication(
-            @PathVariable Long applicationId,
-            @RequestParam String status,
-            Authentication authentication) {
+        @PathVariable Long applicationId,
+        @RequestParam String status,
+        Authentication authentication
+    ) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         var user = userService.findByEmail(userDetails.getUsername());
 

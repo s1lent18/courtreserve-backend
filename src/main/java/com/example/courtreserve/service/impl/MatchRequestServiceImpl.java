@@ -10,6 +10,7 @@ import com.example.courtreserve.service.MatchRequestService;
 import com.example.courtreserve.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class MatchRequestServiceImpl implements MatchRequestService {
     private TeamRepository teamRepository;
 
     @Override
+    @Transactional
     public MatchRequestResponse createMatchRequest(AddMatchRequestRequest request, Long userId) {
         User requester = userService.findById(userId);
         Court court = courtRepository.findById(request.getCourtId())
@@ -90,6 +92,7 @@ public class MatchRequestServiceImpl implements MatchRequestService {
     }
 
     @Override
+    @Transactional
     public void applyToMatchRequest(MatchRequestApplicationRequest request, Long userId) {
         MatchRequest matchRequest = matchRequestRepository.findById(request.getMatchRequestId())
                 .orElseThrow(() -> new ResourceNotFoundException("Match request not found"));
@@ -115,6 +118,7 @@ public class MatchRequestServiceImpl implements MatchRequestService {
     }
 
     @Override
+    @Transactional
     public void respondToApplication(Long applicationId, String status, Long userId) {
         MatchRequestApplication application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));

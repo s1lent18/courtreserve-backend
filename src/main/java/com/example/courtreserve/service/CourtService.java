@@ -18,4 +18,6 @@ public interface CourtService {
     PaginatedResponse<GetPopularCourts> getPopularCourts(String location, Pageable pageable);
 
     String removeCourt(Long Id);
+
+    PaginatedResponse<GetPopularCourts> searchCourts(String query, Pageable pageable);
 }

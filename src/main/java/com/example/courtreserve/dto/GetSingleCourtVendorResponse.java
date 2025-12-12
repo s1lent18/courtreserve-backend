@@ -23,6 +23,6 @@ public class GetSingleCourtVendorResponse {
     LocalTime openTime;
     Integer price;
     String type;
-    @Schema(type = "array", implementation = Object.class)
-    List<BookingResponse> bookings;
+    Integer size;
+    Integer sales;
 }

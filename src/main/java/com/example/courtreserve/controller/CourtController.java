@@ -18,69 +18,97 @@ import java.util.Map;
 @RequestMapping("/court")
 public class CourtController {
 
-    @Autowired
-    private final CourtService courtService;
+        @Autowired
+        private final CourtService courtService;
 
-    public CourtController(CourtService courtService) {
-        this.courtService = courtService;
-    }
+        public CourtController(CourtService courtService) {
+                this.courtService = courtService;
+        }
 
-    @GetMapping("/getPopularCourts")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getPopularCourts(
+        @GetMapping("/popular")
+        @PreAuthorize("hasRole('USER')")
+        public ResponseEntity<?> getPopularCourts(
             @RequestParam String location,
             @Parameter(hidden = true) Pageable pageable
-    ) {
-        PaginatedResponse<GetPopularCourts> courts = courtService.getPopularCourts(location, pageable);
+        ) {
+            PaginatedResponse<GetPopularCourts> courts = courtService.getPopularCourts(location, pageable);
 
-        return ResponseEntity.ok(Map.of(
+            return ResponseEntity.ok(
+            Map.of(
                 "message", "Popular Courts Retrieved",
                 "page", courts.getPage(),
                 "size", courts.getSize(),
                 "totalPages", courts.getTotalPages(),
                 "totalElements", courts.getTotalElements(),
-                "content", courts.getContent()
-        ));
-    }
+                "content", courts.getContent())
+            );
+        }
 
-    @GetMapping("/getCourt")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getCourtById(
-            @RequestParam Long id
-    ) {
-        var court = courtService.getCourtById(id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(Map.of("message", "Court Found Successfully", "court", court));
-    }
+        @GetMapping("/{id}")
+        @PreAuthorize("hasRole('USER')")
+        public ResponseEntity<?> getCourtById(
+            @PathVariable Long id
+        ) {
+            var court = courtService.getCourtById(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                            .body(Map.of("message", "Court Found Successfully", "court", court));
+        }
 
-    @PostMapping("/{vendorId}/addCourt")
-    @PreAuthorize("hasRole('VENDOR')")
-    public ResponseEntity<?> registerCourt(
+        @PostMapping("/vendor/{vendorId}")
+        @PreAuthorize("hasRole('VENDOR')")
+        public ResponseEntity<?> registerCourt(
             @PathVariable Long vendorId,
             @RequestBody AddCourtRequest request
-    ) {
-        var court = courtService.addCourt(vendorId, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        ) {
+            var court = courtService.addCourt(vendorId, request);
+            return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("message", "Court added successfully", "court", court));
-    }
+        }
 
-    @GetMapping("/getVendorCourts")
-    @PreAuthorize("hasRole('VENDOR')")
-    public ResponseEntity<?> getCourtsByVendor(
-            @RequestParam Long id
-    ) {
-        var court = courtService.getCourtsOfVendor(id);
-        return ResponseEntity.status(HttpStatus.OK)
+        @GetMapping("/vendor/{id}")
+        @PreAuthorize("hasRole('VENDOR')")
+        public ResponseEntity<?> getCourtsByVendor(
+            @PathVariable Long id
+        ) {
+            var court = courtService.getCourtsOfVendor(id);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Courts Found Successfully", "court", court));
-    }
+        }
 
-    @GetMapping("/getSingleCourt")
-    @PreAuthorize("hasRole('VENDOR')")
-    public ResponseEntity<?> getSingleCourt(
-            @RequestParam Long id
-    ) {
-        var singleCourt = courtService.getVendorCourtById(id);
-        return ResponseEntity.status(HttpStatus.OK)
+        @GetMapping("/vendor/single/{id}")
+        @PreAuthorize("hasRole('VENDOR')")
+        public ResponseEntity<?> getSingleCourt(
+            @PathVariable Long id
+        ) {
+            var singleCourt = courtService.getVendorCourtById(id);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Single Court Returned", "court", singleCourt));
-    }
+        }
+
+        @GetMapping("/search")
+        @PreAuthorize("hasRole('USER')")
+        public ResponseEntity<?> searchCourts(
+            @RequestParam String q,
+            @Parameter(hidden = true) Pageable pageable
+        ) {
+            PaginatedResponse<GetPopularCourts> courts = courtService.searchCourts(q, pageable);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Search Results",
+                "page", courts.getPage(),
+                "size", courts.getSize(),
+                "totalPages", courts.getTotalPages(),
+                "totalElements", courts.getTotalElements(),
+                "content", courts.getContent()));
+        }
+
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('VENDOR')")
+        public ResponseEntity<?> deleteCourt(
+            @PathVariable Long id
+        ) {
+            String message = courtService.removeCourt(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", message));
+        }
 }

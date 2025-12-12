@@ -2,6 +2,7 @@ package com.example.courtreserve.service.impl;
 
 import com.example.courtreserve.database.models.Role;
 import com.example.courtreserve.database.models.User;
+import com.example.courtreserve.database.repository.*;
 import com.example.courtreserve.database.repository.RoleRepository;
 import com.example.courtreserve.database.repository.TeamMemberRepository;
 import com.example.courtreserve.database.repository.TeamRepository;
@@ -10,15 +11,20 @@ import com.example.courtreserve.dto.AddUserRequest;
 import com.example.courtreserve.dto.AddUserResponse;
 import com.example.courtreserve.dto.LoginUserResponse;
 import com.example.courtreserve.dto.TeamAssociation;
+import com.example.courtreserve.dto.UpdateUserRequest;
 import com.example.courtreserve.exception.ConflictException;
+import com.example.courtreserve.exception.ForeignKeyConstraintException;
 import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,6 +46,24 @@ public class UserServiceImpl implements UserService {
         private TeamMemberRepository teamMemberRepository;
 
         @Autowired
+        private TournamentRepository tournamentRepository;
+
+        @Autowired
+        private BookingRepository bookingRepository;
+
+        @Autowired
+        private ReviewRepository reviewRepository;
+
+        @Autowired
+        private MatchRequestRepository matchRequestRepository;
+
+        @Autowired
+        private MatchRequestApplicationRepository matchRequestApplicationRepository;
+
+        @Autowired
+        private CourtRepository courtRepository;
+
+        @Autowired
         private PasswordEncoder passwordEncoder;
 
         public LoginUserResponse getUser(String email) {
@@ -55,6 +79,7 @@ public class UserServiceImpl implements UserService {
                                 user.getCoverImage());
         }
 
+        @Transactional
         public AddUserResponse addNewUser(AddUserRequest addUserRequest) {
                 boolean exists = userRepository.existsByEmail(addUserRequest.getEmail());
                 if (exists) {
@@ -111,5 +136,72 @@ public class UserServiceImpl implements UserService {
         public User findByEmail(String email) {
                 return userRepository.findByEmail(email)
                                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        }
+
+        @Override
+        @Transactional
+        public LoginUserResponse updateUser(Long id, UpdateUserRequest request) {
+                User user = userRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+                if (request.getName() != null) {
+                        user.setName(request.getName());
+                }
+                if (request.getLocation() != null) {
+                        user.setLocation(request.getLocation());
+                }
+                if (request.getProfileImage() != null) {
+                        user.setCoverImage(request.getProfileImage());
+                }
+
+                User updatedUser = userRepository.save(user);
+
+                return new LoginUserResponse(
+                                updatedUser.getId(),
+                                updatedUser.getName(),
+                                updatedUser.getEmail(),
+                                updatedUser.getCreated(),
+                                updatedUser.getLocation(),
+                                updatedUser.getCoverImage());
+        }
+
+        @Override
+        @Transactional
+        public void deleteUser(Long id) {
+                User user = userRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+                List<String> dependencies = new ArrayList<>();
+
+                if (teamRepository.existsByCaptain_Id(id)) {
+                        dependencies.add("Teams (as captain)");
+                }
+                if (teamMemberRepository.existsByUser_Id(id)) {
+                        dependencies.add("Team memberships");
+                }
+                if (tournamentRepository.existsByOrganizer_Id(id)) {
+                        dependencies.add("Tournaments (as organizer)");
+                }
+                if (bookingRepository.existsByUser_Id(id)) {
+                        dependencies.add("Bookings");
+                }
+                if (reviewRepository.existsByUser_Id(id)) {
+                        dependencies.add("Reviews");
+                }
+                if (matchRequestRepository.existsByRequester_Id(id)) {
+                        dependencies.add("Match requests");
+                }
+                if (matchRequestApplicationRepository.existsByApplicant_Id(id)) {
+                        dependencies.add("Match request applications");
+                }
+                if (courtRepository.existsByVendor_Id(id)) {
+                        dependencies.add("Courts (as vendor)");
+                }
+
+                if (!dependencies.isEmpty()) {
+                        throw new ForeignKeyConstraintException("User", id, dependencies);
+                }
+
+                userRepository.delete(user);
         }
 }

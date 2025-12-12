@@ -21,4 +21,6 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
     List<MatchRequest> findByRequestType(String requestType);
 
     List<MatchRequest> findByCourtAndDateAndStatus(Court court, LocalDate date, String status);
+
+    Boolean existsByRequester_Id(Long id);
 }

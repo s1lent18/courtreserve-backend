@@ -14,51 +14,51 @@ import java.util.Map;
 @RequestMapping("/match")
 public class MatchController {
 
-    @Autowired
-    private MatchService matchService;
+        @Autowired
+        private MatchService matchService;
 
-    @GetMapping("/{tournamentId}/bracket")
-    public ResponseEntity<?> getTournamentBracket(
+        @GetMapping("/{tournamentId}/bracket")
+        public ResponseEntity<?> getTournamentBracket(
             @PathVariable Long tournamentId
-    ) {
-        var bracket = matchService.getTournamentBracket(tournamentId);
-        return ResponseEntity.status(HttpStatus.OK)
+        ) {
+            var bracket = matchService.getTournamentBracket(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Tournament bracket retrieved", "bracket", bracket));
-    }
+        }
 
-    @PostMapping("/schedule")
-    public ResponseEntity<?> scheduleMatch(
+        @PostMapping("/schedule")
+        public ResponseEntity<?> scheduleMatch(
             @RequestBody ScheduleMatchRequest request
-    ) {
-        var match = matchService.scheduleMatch(request);
-        return ResponseEntity.status(HttpStatus.OK)
+        ) {
+            var match = matchService.scheduleMatch(request);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Match scheduled successfully", "match", match));
-    }
+        }
 
-    @PostMapping("/updateResult")
-    public ResponseEntity<?> updateMatchResult(
+        @PatchMapping("/result")
+        public ResponseEntity<?> updateMatchResult(
             @RequestBody UpdateMatchResultRequest request
-    ) {
-        var match = matchService.updateMatchResult(request);
-        return ResponseEntity.status(HttpStatus.OK)
+        ) {
+            var match = matchService.updateMatchResult(request);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Match result updated successfully", "match", match));
-    }
+        }
 
-    @GetMapping("/{tournamentId}/unscheduledMatches")
-    public ResponseEntity<?> getUnscheduledMatches(
+        @GetMapping("/{tournamentId}/unscheduled")
+        public ResponseEntity<?> getUnscheduledMatches(
             @PathVariable Long tournamentId
-    ) {
-        var matches = matchService.getUnscheduledMatches(tournamentId);
-        return ResponseEntity.status(HttpStatus.OK)
+        ) {
+            var matches = matchService.getUnscheduledMatches(tournamentId);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Unscheduled matches retrieved", "matches", matches));
-    }
+        }
 
-    @GetMapping("/{matchId}")
-    public ResponseEntity<?> getMatchById(
+        @GetMapping("/{matchId}")
+        public ResponseEntity<?> getMatchById(
             @PathVariable Long matchId
-    ) {
-        var match = matchService.getMatchById(matchId);
-        return ResponseEntity.status(HttpStatus.OK)
+        ) {
+            var match = matchService.getMatchById(matchId);
+            return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("message", "Match retrieved successfully", "match", match));
-    }
+        }
 }

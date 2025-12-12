@@ -17,88 +17,58 @@ public class TeamController {
     @Autowired
     private TeamService teamService;
 
-    @PostMapping("/createTeam")
+    @PostMapping
     public ResponseEntity<?> createTeam(
-            @RequestBody CreateTeamRequest request,
-            @RequestParam Long captainId
+        @RequestBody CreateTeamRequest request,
+        @RequestParam Long captainId
     ) {
         var team = teamService.createTeam(captainId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Team created successfully", "team", team));
+                        .body(Map.of("message", "Team created successfully", "team", team));
     }
 
-    @PostMapping("/joinTournament")
+    @PostMapping("/tournament")
     public ResponseEntity<?> joinTournament(
-            @RequestBody JoinTournamentRequest request
+        @RequestBody JoinTournamentRequest request
     ) {
         var participation = teamService.joinTournament(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Team successfully registered for tournament", "participation", participation));
+            .body(Map.of("message", "Team successfully registered for tournament", "participation", participation));
     }
 
-    @GetMapping("/getSingleTeam")
+    @GetMapping("/{id}")
     public ResponseEntity<?> getSingleTeam(
-            @RequestParam Long Id
+        @PathVariable Long id
     ) {
-        var team = teamService.getSingleTeam(Id);
+        var team = teamService.getSingleTeam(id);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(Map.of("message", "Single Team Returned", "singleTeam", team));
+            .body(Map.of("message", "Single Team Returned", "singleTeam", team));
     }
 
-    @PostMapping("/addMember")
+    @PostMapping("/member")
     public ResponseEntity<?> addTeamMember(
-            @RequestBody AddTeamMemberRequest request
+        @RequestBody AddTeamMemberRequest request
     ) {
         var member = teamService.addTeamMember(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Team member added successfully", "member", member));
+            .body(Map.of("message", "Team member added successfully", "member", member));
     }
 
-    @PostMapping("/removeMember")
+    @DeleteMapping("/member")
     public ResponseEntity<?> removeTeamMember(
-            @RequestBody RemoveTeamMemberRequest request
+        @RequestBody RemoveTeamMemberRequest request
     ) {
         teamService.removeTeamMember(request);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(Map.of("message", "Team member removed successfully"));
+            .body(Map.of("message", "Team member removed successfully"));
     }
 
-    @PostMapping("/updateMember")
+    @PutMapping("/member")
     public ResponseEntity<?> updateTeamMember(
-            @RequestBody UpdateTeamMemberRequest request
+        @RequestBody UpdateTeamMemberRequest request
     ) {
         var member = teamService.updateTeamMember(request);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(Map.of("message", "Team member updated successfully", "member", member));
-    }
-
-    @PostMapping("/generateCode")
-    public ResponseEntity<?> generateCode(
-            @RequestParam String captainEmail
-    ) {
-        try {
-            var code = teamService.generateCode(captainEmail);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "OTP Code", "code", code));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @PostMapping("/validate")
-    public ResponseEntity<?> validate(
-            @RequestBody ValidateOTP validateOTP
-    ) {
-        try {
-            var code = teamService.validateCode(validateOTP);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message", "OTP Validation", "singleTeam", code));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+            .body(Map.of("message", "Team member updated successfully", "member", member));
     }
 }

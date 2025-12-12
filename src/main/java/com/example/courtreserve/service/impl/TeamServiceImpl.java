@@ -9,6 +9,7 @@ import com.example.courtreserve.exception.ResourceNotFoundException;
 import com.example.courtreserve.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,327 +20,331 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class TeamServiceImpl implements TeamService {
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private TeamRepository teamRepository;
+        @Autowired
+        private TeamRepository teamRepository;
 
-    @Autowired
-    private TeamMemberRepository teamMemberRepository;
+        @Autowired
+        private TeamMemberRepository teamMemberRepository;
 
-    @Autowired
-    private TournamentRepository tournamentRepository;
+        @Autowired
+        private TournamentRepository tournamentRepository;
 
-    @Autowired
-    private TournamentTeamRepository tournamentTeamRepository;
+        @Autowired
+        private TournamentTeamRepository tournamentTeamRepository;
 
-    private final Map<String, String> teamCodes = new ConcurrentHashMap<>();
+        private final Map<String, String> teamCodes = new ConcurrentHashMap<>();
 
-    @Override
-    public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
-        // Find the captain
-        User captain = userRepository.findById(captainId)
-                .orElseThrow(() -> new ResourceNotFoundException("Captain", "id", captainId));
+        @Override
+        @Transactional
+        public CreateTeamResponse createTeam(Long captainId, CreateTeamRequest request) {
+                // Find the captain
+                User captain = userRepository.findById(captainId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Captain", "id", captainId));
 
-        // Check if team name already exists
-        if (teamRepository.existsByName(request.getName())) {
-            throw new ConflictException("Team", "name", request.getName());
-        }
-
-        // Create the team
-        Team team = Team.builder()
-                .name(request.getName())
-                .sport(request.getSport())
-                .captain(captain)
-                .created(LocalDateTime.now())
-                .build();
-
-        Team savedTeam = teamRepository.save(team);
-
-        // Add captain as first team member
-        TeamMember captainMember = TeamMember.builder()
-                .id(new TeamMemberId(savedTeam.getId(), captainId))
-                .team(savedTeam)
-                .user(captain)
-                .role("CAPTAIN")
-                .joinedAt(LocalDateTime.now())
-                .build();
-
-        teamMemberRepository.save(captainMember);
-
-        // Add other members if provided
-        if (request.getMemberIds() != null && !request.getMemberIds().isEmpty()) {
-            for (Long memberId : request.getMemberIds()) {
-                if (!memberId.equals(captainId)) { // Don't add captain twice
-                    User member = userRepository.findById(memberId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
-
-                    TeamMember teamMember = TeamMember.builder()
-                            .id(new TeamMemberId(savedTeam.getId(), memberId))
-                            .team(savedTeam)
-                            .user(member)
-                            .role("MEMBER")
-                            .joinedAt(LocalDateTime.now())
-                            .build();
-
-                    teamMemberRepository.save(teamMember);
+                // Check if team name already exists
+                if (teamRepository.existsByName(request.getName())) {
+                        throw new ConflictException("Team", "name", request.getName());
                 }
-            }
+
+                // Create the team
+                Team team = Team.builder()
+                                .name(request.getName())
+                                .sport(request.getSport())
+                                .captain(captain)
+                                .created(LocalDateTime.now())
+                                .build();
+
+                Team savedTeam = teamRepository.save(team);
+
+                // Add captain as first team member
+                TeamMember captainMember = TeamMember.builder()
+                                .id(new TeamMemberId(savedTeam.getId(), captainId))
+                                .team(savedTeam)
+                                .user(captain)
+                                .role("CAPTAIN")
+                                .joinedAt(LocalDateTime.now())
+                                .build();
+
+                teamMemberRepository.save(captainMember);
+
+                // Add other members if provided
+                if (request.getMemberIds() != null && !request.getMemberIds().isEmpty()) {
+                        for (Long memberId : request.getMemberIds()) {
+                                if (!memberId.equals(captainId)) { // Don't add captain twice
+                                        User member = userRepository.findById(memberId)
+                                                        .orElseThrow(() -> new ResourceNotFoundException("Member", "id",
+                                                                        memberId));
+
+                                        TeamMember teamMember = TeamMember.builder()
+                                                        .id(new TeamMemberId(savedTeam.getId(), memberId))
+                                                        .team(savedTeam)
+                                                        .user(member)
+                                                        .role("MEMBER")
+                                                        .joinedAt(LocalDateTime.now())
+                                                        .build();
+
+                                        teamMemberRepository.save(teamMember);
+                                }
+                        }
+                }
+
+                return new CreateTeamResponse(
+                                savedTeam.getId(),
+                                savedTeam.getName(),
+                                savedTeam.getSport(),
+                                savedTeam.getCaptain().getId(),
+                                savedTeam.getCreated(),
+                                request.getMemberIds());
         }
 
-        return new CreateTeamResponse(
-                savedTeam.getId(),
-                savedTeam.getName(),
-                savedTeam.getSport(),
-                savedTeam.getCaptain().getId(),
-                savedTeam.getCreated(),
-                request.getMemberIds()
-        );
-    }
+        @Transactional
+        public JoinTournamentResponse joinTournament(JoinTournamentRequest request) {
+                // Find the team
+                Team team = teamRepository.findById(request.getTeamId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
-    public JoinTournamentResponse joinTournament(JoinTournamentRequest request) {
-        // Find the team
-        Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
+                // Find the tournament
+                Tournament tournament = tournamentRepository.findById(request.getTournamentId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id",
+                                                request.getTournamentId()));
 
-        // Find the tournament
-        Tournament tournament = tournamentRepository.findById(request.getTournamentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tournament", "id", request.getTournamentId()));
+                // Check if tournament has already started or is completed/cancelled
+                if ("IN_PROGRESS".equals(tournament.getStatus()) ||
+                                "COMPLETED".equals(tournament.getStatus()) ||
+                                "CANCELED".equals(tournament.getStatus()) ||
+                                "REJECTED".equals(tournament.getStatus())) {
+                        throw new BadRequestException(
+                                        "Cannot join tournament. Tournament status is: " + tournament.getStatus());
+                }
 
-        // Check if tournament has already started or is completed/cancelled
-        if ("IN_PROGRESS".equals(tournament.getStatus()) || 
-            "COMPLETED".equals(tournament.getStatus()) || 
-            "CANCELED".equals(tournament.getStatus()) || 
-            "REJECTED".equals(tournament.getStatus())) {
-            throw new BadRequestException("Cannot join tournament. Tournament status is: " + tournament.getStatus());
+                // Check if team is already registered for this tournament
+                if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
+                        throw new ConflictException("Team is already registered for this tournament");
+                }
+
+                // Check if team sport matches tournament sport
+                if (!team.getSport().equalsIgnoreCase(tournament.getSport())) {
+                        throw new BadRequestException("Team sport does not match tournament sport");
+                }
+
+                // Register team for tournament
+                TournamentTeam tournamentTeam = TournamentTeam.builder()
+                                .id(new TournamentTeamId(request.getTournamentId(), request.getTeamId()))
+                                .tournament(tournament)
+                                .team(team)
+                                .registeredAt(LocalDateTime.now())
+                                .build();
+
+                tournamentTeamRepository.save(tournamentTeam);
+
+                return new JoinTournamentResponse(
+                                request.getTournamentId(),
+                                request.getTeamId(),
+                                team.getName(),
+                                LocalDateTime.now());
         }
 
-        // Check if team is already registered for this tournament
-        if (tournamentTeamRepository.existsByTournamentAndTeam(tournament, team)) {
-            throw new ConflictException("Team is already registered for this tournament");
+        @Override
+        public GetSingleTeamResponse getSingleTeam(Long id) {
+                Team team = teamRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", id));
+
+                List<GetTeamMembers> members = new ArrayList<>();
+
+                for (TeamMember teamMember : team.getMembers()) {
+                        GetTeamMembers member = new GetTeamMembers(
+                                        teamMember.getId(),
+                                        teamMember.getUser().getId(),
+                                        teamMember.getUser().getName(),
+                                        teamMember.getRole(),
+                                        teamMember.getUser().getCoverImage());
+                        members.add(member);
+                }
+
+                return new GetSingleTeamResponse(
+                                team.getId(),
+                                team.getName(),
+                                team.getSport(),
+                                team.getCaptain().getId(),
+                                team.getCaptain().getName(),
+                                members);
         }
 
-        // Check if team sport matches tournament sport
-        if (!team.getSport().equalsIgnoreCase(tournament.getSport())) {
-            throw new BadRequestException("Team sport does not match tournament sport");
+        @Override
+        @Transactional
+        public TeamMemberResponse addTeamMember(AddTeamMemberRequest request) {
+                // Find the team
+                Team team = teamRepository.findById(request.getTeamId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
+
+                // Find the user
+                User user = userRepository.findByEmail(request.getUserEmail())
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "email",
+                                                request.getUserEmail()));
+
+                // Check if user is already a member of this team
+                if (teamMemberRepository.existsByTeamAndUser(team, user)) {
+                        throw new ConflictException("User is already a member of this team");
+                }
+
+                // Set default role if not provided
+                String role = request.getRole() != null && !request.getRole().isEmpty()
+                                ? request.getRole()
+                                : "MEMBER";
+
+                // Prevent adding another CAPTAIN
+                if ("CAPTAIN".equalsIgnoreCase(role)) {
+                        throw new BadRequestException("Cannot add another captain. Team already has a captain.");
+                }
+
+                // Create team member
+                TeamMember teamMember = TeamMember.builder()
+                                .id(new TeamMemberId(request.getTeamId(), user.getId()))
+                                .team(team)
+                                .user(user)
+                                .role(role)
+                                .joinedAt(LocalDateTime.now())
+                                .build();
+
+                teamMemberRepository.save(teamMember);
+
+                return new TeamMemberResponse(
+                                team.getId(),
+                                team.getName(),
+                                user.getId(),
+                                user.getName(),
+                                role,
+                                teamMember.getJoinedAt());
         }
 
-        // Register team for tournament
-        TournamentTeam tournamentTeam = TournamentTeam.builder()
-                .id(new TournamentTeamId(request.getTournamentId(), request.getTeamId()))
-                .tournament(tournament)
-                .team(team)
-                .registeredAt(LocalDateTime.now())
-                .build();
+        @Override
+        @Transactional
+        public void removeTeamMember(RemoveTeamMemberRequest request) {
+                // Find the team
+                Team team = teamRepository.findById(request.getTeamId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
-        tournamentTeamRepository.save(tournamentTeam);
+                // Find the user
+                User user = userRepository.findById(request.getUserId())
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
 
-        return new JoinTournamentResponse(
-                request.getTournamentId(),
-                request.getTeamId(),
-                team.getName(),
-                LocalDateTime.now()
-        );
-    }
+                // Check if user is a member of this team
+                if (!teamMemberRepository.existsByTeamAndUser(team, user)) {
+                        throw new ResourceNotFoundException("User is not a member of this team");
+                }
 
-    @Override
-    public GetSingleTeamResponse getSingleTeam(Long id) {
-        Team team = teamRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", id));
+                // Prevent removing the captain
+                if (team.getCaptain().getId().equals(request.getUserId())) {
+                        throw new BadRequestException(
+                                        "Cannot remove the team captain. Transfer captaincy first or delete the team.");
+                }
 
-        List<GetTeamMembers> members = new ArrayList<>();
-
-        for (TeamMember teamMember : team.getMembers()) {
-            GetTeamMembers member = new GetTeamMembers(
-                    teamMember.getId(),
-                    teamMember.getUser().getId(),
-                    teamMember.getUser().getName(),
-                    teamMember.getRole(),
-                    teamMember.getUser().getCoverImage()
-            );
-            members.add(member);
+                // Remove the team member
+                TeamMemberId memberId = new TeamMemberId(request.getTeamId(), request.getUserId());
+                teamMemberRepository.deleteById(memberId);
         }
 
-        return new GetSingleTeamResponse(
-                team.getId(),
-                team.getName(),
-                team.getSport(),
-                team.getCaptain().getId(),
-                team.getCaptain().getName(),
-                members
-        );
-    }
+        @Override
+        @Transactional
+        public TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request) {
+                // Find the team
+                Team team = teamRepository.findById(request.getTeamId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
 
-    @Override
-    public TeamMemberResponse addTeamMember(AddTeamMemberRequest request) {
-        // Find the team
-        Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
+                // Find the user
+                User user = userRepository.findById(request.getUserId())
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
 
-        // Find the user
-        User user = userRepository.findByEmail(request.getUserEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getUserEmail()));
+                // Find the team member
+                TeamMemberId memberId = new TeamMemberId(request.getTeamId(), request.getUserId());
+                TeamMember teamMember = teamMemberRepository.findById(memberId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Team member not found"));
 
-        // Check if user is already a member of this team
-        if (teamMemberRepository.existsByTeamAndUser(team, user)) {
-            throw new ConflictException("User is already a member of this team");
+                // Prevent changing captain role
+                if ("CAPTAIN".equalsIgnoreCase(teamMember.getRole()) &&
+                                !"CAPTAIN".equalsIgnoreCase(request.getRole())) {
+                        throw new BadRequestException(
+                                        "Cannot change captain's role. Transfer captaincy to another member first.");
+                }
+
+                // Prevent setting another captain
+                if ("CAPTAIN".equalsIgnoreCase(request.getRole()) &&
+                                !teamMember.getRole().equalsIgnoreCase("CAPTAIN")) {
+                        throw new BadRequestException("Cannot set another captain. Transfer captaincy instead.");
+                }
+
+                // Update the role
+                teamMember.setRole(request.getRole());
+                teamMemberRepository.save(teamMember);
+
+                return new TeamMemberResponse(
+                                team.getId(),
+                                team.getName(),
+                                user.getId(),
+                                user.getName(),
+                                teamMember.getRole(),
+                                teamMember.getJoinedAt());
         }
 
-        // Set default role if not provided
-        String role = request.getRole() != null && !request.getRole().isEmpty() 
-                ? request.getRole() 
-                : "MEMBER";
-
-        // Prevent adding another CAPTAIN
-        if ("CAPTAIN".equalsIgnoreCase(role)) {
-            throw new BadRequestException("Cannot add another captain. Team already has a captain.");
+        @Override
+        public String generateCode(String captainEmail) {
+                String code = String.valueOf((int) (Math.random() * 9000) + 1000);
+                teamCodes.put(captainEmail, code);
+                return code;
         }
 
-        // Create team member
-        TeamMember teamMember = TeamMember.builder()
-                .id(new TeamMemberId(request.getTeamId(), user.getId()))
-                .team(team)
-                .user(user)
-                .role(role)
-                .joinedAt(LocalDateTime.now())
-                .build();
+        @Override
+        @Transactional
+        public GetSingleTeamResponse validateCode(ValidateOTP validateOTP) {
 
-        teamMemberRepository.save(teamMember);
+                User captain = userRepository.findByEmail(validateOTP.getCaptainEmail())
+                                .orElseThrow(() -> new RuntimeException("Team Not Found"));
 
-        return new TeamMemberResponse(
-                team.getId(),
-                team.getName(),
-                user.getId(),
-                user.getName(),
-                role,
-                teamMember.getJoinedAt()
-        );
-    }
+                User user = userRepository.findById(validateOTP.getId())
+                                .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-    @Override
-    public void removeTeamMember(RemoveTeamMemberRequest request) {
-        // Find the team
-        Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
+                Team team = teamRepository.findByCaptain_Id(captain.getId())
+                                .orElseThrow(() -> new RuntimeException("Team Not Found"));
 
-        // Find the user
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
+                if (validateOTP.getCode().equals(teamCodes.get(validateOTP.getCaptainEmail()))) {
 
-        // Check if user is a member of this team
-        if (!teamMemberRepository.existsByTeamAndUser(team, user)) {
-            throw new ResourceNotFoundException("User is not a member of this team");
+                        TeamMemberId teamMemberId = new TeamMemberId(
+                                        team.getId(),
+                                        validateOTP.getId());
+
+                        TeamMember teamMember = new TeamMember(
+                                        teamMemberId,
+                                        team,
+                                        user,
+                                        "MEMBER",
+                                        LocalDateTime.now());
+
+                        teamMemberRepository.save(teamMember);
+
+                        List<GetTeamMembers> teamMembers = new ArrayList<>();
+
+                        for (TeamMember teamMemberLoop : team.getMembers()) {
+                                GetTeamMembers getTeamMembers = new GetTeamMembers(
+                                                teamMemberLoop.getId(),
+                                                teamMemberLoop.getUser().getId(),
+                                                teamMemberLoop.getUser().getName(),
+                                                teamMemberLoop.getRole(),
+                                                teamMemberLoop.getUser().getCoverImage());
+                                teamMembers.add(getTeamMembers);
+                        }
+
+                        return new GetSingleTeamResponse(
+                                        team.getId(),
+                                        team.getName(),
+                                        team.getSport(),
+                                        team.getCaptain().getId(),
+                                        team.getCaptain().getName(),
+                                        teamMembers);
+                } else {
+                        return null;
+                }
         }
-
-        // Prevent removing the captain
-        if (team.getCaptain().getId().equals(request.getUserId())) {
-            throw new BadRequestException("Cannot remove the team captain. Transfer captaincy first or delete the team.");
-        }
-
-        // Remove the team member
-        TeamMemberId memberId = new TeamMemberId(request.getTeamId(), request.getUserId());
-        teamMemberRepository.deleteById(memberId);
-    }
-
-    @Override
-    public TeamMemberResponse updateTeamMember(UpdateTeamMemberRequest request) {
-        // Find the team
-        Team team = teamRepository.findById(request.getTeamId())
-                .orElseThrow(() -> new ResourceNotFoundException("Team", "id", request.getTeamId()));
-
-        // Find the user
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
-
-        // Find the team member
-        TeamMemberId memberId = new TeamMemberId(request.getTeamId(), request.getUserId());
-        TeamMember teamMember = teamMemberRepository.findById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("Team member not found"));
-
-        // Prevent changing captain role
-        if ("CAPTAIN".equalsIgnoreCase(teamMember.getRole()) && 
-            !"CAPTAIN".equalsIgnoreCase(request.getRole())) {
-            throw new BadRequestException("Cannot change captain's role. Transfer captaincy to another member first.");
-        }
-
-        // Prevent setting another captain
-        if ("CAPTAIN".equalsIgnoreCase(request.getRole()) && 
-            !teamMember.getRole().equalsIgnoreCase("CAPTAIN")) {
-            throw new BadRequestException("Cannot set another captain. Transfer captaincy instead.");
-        }
-
-        // Update the role
-        teamMember.setRole(request.getRole());
-        teamMemberRepository.save(teamMember);
-
-        return new TeamMemberResponse(
-                team.getId(),
-                team.getName(),
-                user.getId(),
-                user.getName(),
-                teamMember.getRole(),
-                teamMember.getJoinedAt()
-        );
-    }
-
-    @Override
-    public String generateCode(String captainEmail) {
-        String code = String.valueOf((int)(Math.random() * 9000) + 1000);
-        teamCodes.put(captainEmail, code);
-        return code;
-    }
-
-    @Override
-    public GetSingleTeamResponse validateCode(ValidateOTP validateOTP) {
-
-        User captain = userRepository.findByEmail(validateOTP.getCaptainEmail()).orElseThrow(() -> new RuntimeException("Team Not Found"));
-
-        User user = userRepository.findById(validateOTP.getId()).orElseThrow(() -> new RuntimeException("User Not Found"));
-
-        Team team = teamRepository.findByCaptain_Id(captain.getId()).orElseThrow(() -> new RuntimeException("Team Not Found"));
-
-        if (validateOTP.getCode().equals(teamCodes.get(validateOTP.getCaptainEmail()))) {
-
-            TeamMemberId teamMemberId = new TeamMemberId(
-                    team.getId(),
-                    validateOTP.getId()
-            );
-
-            TeamMember teamMember = new TeamMember(
-                    teamMemberId,
-                    team,
-                    user,
-                    "MEMBER",
-                    LocalDateTime.now()
-            );
-
-            teamMemberRepository.save(teamMember);
-
-            List<GetTeamMembers> teamMembers = new ArrayList<>();
-
-            for (TeamMember teamMemberLoop : team.getMembers()) {
-                GetTeamMembers getTeamMembers = new GetTeamMembers(
-                        teamMemberLoop.getId(),
-                        teamMemberLoop.getUser().getId(),
-                        teamMemberLoop.getUser().getName(),
-                        teamMemberLoop.getRole(),
-                        teamMemberLoop.getUser().getCoverImage()
-                );
-                teamMembers.add(getTeamMembers);
-            }
-
-            return new GetSingleTeamResponse(
-                    team.getId(),
-                    team.getName(),
-                    team.getSport(),
-                    team.getCaptain().getId(),
-                    team.getCaptain().getName(),
-                    teamMembers
-            );
-        }
-        else {
-            return null;
-        }
-    }
 }

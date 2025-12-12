@@ -28,4 +28,8 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     List<Tournament> findPendingTournaments(@Param("courtIds") List<Long> courtIds);
 
     Page<Tournament> findAllByCourt_Location(String location, Pageable pageable);
+
+    boolean existsByOrganizer_Id(Long userId);
+
+    Tournament findByOrganizer_Id(Long userId);
 }

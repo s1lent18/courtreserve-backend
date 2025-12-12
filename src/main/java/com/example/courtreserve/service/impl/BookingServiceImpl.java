@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,14 +36,15 @@ public class BookingServiceImpl implements BookingService {
     @Autowired
     private CourtRepository courtRepository;
 
-    public BookingServiceImpl(UserRepository userRepository, BookingRepository bookingRepository, CourtRepository courtRepository) {
+    public BookingServiceImpl(UserRepository userRepository, BookingRepository bookingRepository,
+            CourtRepository courtRepository) {
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.courtRepository = courtRepository;
     }
 
     @Cacheable(value = "bookings", key = "#userId")
-    public List<GetBookingResponse> getAllBookings (Long userId) {
+    public List<GetBookingResponse> getAllBookings(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
@@ -60,8 +62,7 @@ public class BookingServiceImpl implements BookingService {
                     booking.getPrice(),
                     booking.getAdvance(),
                     booking.getToBePaid(),
-                    booking.getCreated()
-            );
+                    booking.getCreated());
 
             getBookingResponses.add(getBookingResponse);
         }
@@ -69,6 +70,7 @@ public class BookingServiceImpl implements BookingService {
         return getBookingResponses;
     }
 
+    @Transactional
     @CacheEvict(value = "bookings", key = "#request.userId")
     public AddBookingResponse createBooking(AddBookingRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -102,8 +104,7 @@ public class BookingServiceImpl implements BookingService {
                 savedBooking.getPrice(),
                 savedBooking.getAdvance(),
                 savedBooking.getToBePaid(),
-                savedBooking.getCreated()
-        );
+                savedBooking.getCreated());
     }
 
     public List<BookingResponse> getPendingBooking(Long vendorId) {
@@ -129,15 +130,15 @@ public class BookingServiceImpl implements BookingService {
                     booking.getPrice(),
                     booking.getAdvance(),
                     booking.getToBePaid(),
-                    booking.getCreated()
-            );
+                    booking.getCreated());
             bookingResponses.add(temp);
         }
 
         return bookingResponses;
     }
 
-    @CacheEvict(value = "bookings", key = "#result.user.id")
+    @Transactional
+    @CacheEvict(value = "bookings", key = "#result.userId")
     public BookingResponse confirmBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
@@ -164,11 +165,11 @@ public class BookingServiceImpl implements BookingService {
                 response.getPrice(),
                 response.getAdvance(),
                 response.getToBePaid(),
-                response.getCreated()
-        );
+                response.getCreated());
     }
 
-    @CacheEvict(value = "bookings", key = "#result.user.id")
+    @Transactional
+    @CacheEvict(value = "bookings", key = "#result.userId")
     public BookingResponse rejectBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
@@ -189,11 +190,11 @@ public class BookingServiceImpl implements BookingService {
                 response.getPrice(),
                 response.getAdvance(),
                 response.getToBePaid(),
-                response.getCreated()
-        );
+                response.getCreated());
     }
 
-    @CacheEvict(value = "bookings", key = "#result.user.id")
+    @Transactional
+    @CacheEvict(value = "bookings", key = "#result.userId")
     public BookingResponse cancelBooking(Long bookingId) {
         Booking pendingBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
@@ -214,11 +215,11 @@ public class BookingServiceImpl implements BookingService {
                 response.getPrice(),
                 response.getAdvance(),
                 response.getToBePaid(),
-                response.getCreated()
-        );
+                response.getCreated());
     }
 
     @Override
+    @Transactional
     public void deleteUserBooking(Long Id, Long bookingId) {
 
         Booking booking = bookingRepository.findById(bookingId)
@@ -237,6 +238,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public void deleteVendorBooking(Long Id, Long bookingId) {
 
         Booking booking = bookingRepository.findById(bookingId)
@@ -254,6 +256,7 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
     }
 
+    @Transactional
     @CacheEvict(value = "bookings", allEntries = true)
     @Scheduled(cron = "0 0 0 * * *")
     public void checkExpiredBookings() {
